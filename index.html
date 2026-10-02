@@ -68,6 +68,8 @@
         body:not(.edit-mode) .hide-if-empty:empty,
         body:not(.edit-mode) .hide-if-no-media:not(:has(img)):not(:has(iframe)) { display: none !important; }
 
+        body.edit-mode .edit-mode-hidden-item { opacity: 0.6; filter: grayscale(40%); border: 1px dashed #cbd5e1; }
+
         #app-sidebar { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         #app-sidebar.collapsed { width: 5.5rem; }
         #app-sidebar.collapsed .hide-on-collapse { display: none; opacity: 0; }
@@ -132,9 +134,9 @@
             </div>
             <input type="file" id="profile_pic_input" class="hidden" accept="image/*" onchange="handleProfilePicUpload(event)">
             
-            <div class="mt-3 text-center hide-on-collapse w-full min-w-0">
-                <textarea rows="1" data-field="profile.name" class="w-full text-center text-lg font-extrabold text-slate-900 bg-transparent editable-border p-1 resize-none overflow-hidden" placeholder="Name">Amaira Mulay</textarea>
-                <textarea rows="1" data-field="profile.grade" class="w-full text-center text-[10px] font-bold uppercase tracking-widest bg-transparent editable-border p-0.5 resize-none overflow-hidden mt-0.5" style="color: var(--theme-primary);" placeholder="Grade">Class 6 • NVS</textarea>
+            <div class="mt-3 text-center hide-on-collapse w-full min-w-0 cursor-pointer" onclick="if(!auth.currentUser) switchView('about')">
+                <textarea rows="1" data-field="profile.name" class="w-full text-center text-lg font-extrabold text-slate-900 bg-transparent editable-border p-1 resize-none overflow-hidden" placeholder="Name" onclick="event.stopPropagation()">Amaira Mulay</textarea>
+                <textarea rows="1" data-field="profile.grade" class="w-full text-center text-[10px] font-bold uppercase tracking-widest bg-transparent editable-border p-0.5 resize-none overflow-hidden mt-0.5" style="color: var(--theme-primary);" placeholder="Grade" onclick="event.stopPropagation()">Class 6 • NVS</textarea>
             </div>
         </div>
 
@@ -143,8 +145,7 @@
 
         <!-- Footer with Minimal Lock Icon & Theme Picker in Admin Mode -->
         <div class="p-4 border-t border-slate-100/50 bg-slate-50/50 flex flex-col space-y-3 hide-on-collapse">
-            <div class="flex justify-between items-center">
-                <span class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">Amaira's Portfolio</span>
+            <div class="flex justify-end items-center">
                 <button onclick="handleAdminLoginToggle()" id="admin-lock-btn" class="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all" title="Admin Login">
                     <i class="fa-solid fa-lock text-sm"></i>
                 </button>
@@ -178,7 +179,7 @@
                 </button>
                 
                 <!-- Website Map Breadcrumbs -->
-                <div class="flex items-center space-x-2 text-xs md:text-sm font-semibold text-slate-500 overflow-x-auto whitespace-nowrap" id="breadcrumb-container">
+                <div class="flex items-center space-x-2 text-xs md:text-sm font-semibold text-slate-500 overflow-x-auto whitespace-nowrap scrollbar-hide" id="breadcrumb-container" style="-webkit-overflow-scrolling: touch;">
                     <!-- Injected by JS -->
                 </div>
             </div>
@@ -217,44 +218,39 @@
             about: { 
                 title: 'Hello! I am Amaira.', 
                 subtitle: 'Welcome to my digital portfolio!', 
-                bio: 'I am an enthusiastic 6th-grade student at Nath Valley School in Chhatrapati Sambhajinagar. I love exploring the wonders of Science, participating in school activities, and learning new skills every day! I hope you like my digital portfolio, which will give you a brief about my academics as well as my extra-curricular activities and hobbies.',
+                bio: 'I am an enthusiastic student exploring the wonders of science, participating in school activities, and learning new skills every day!',
                 media: [] 
             },
             
             sections: [
                 { id: 'sec_acad', title: 'Academics', isAcademic: true },
-                { id: 'sec_beyond', title: 'Beyond Academics', isAcademic: false, categories: ['extracurriculars', 'hobbies', 'achievements', 'photoFeed'] }
+                { id: 'sec_beyond', title: 'Beyond Academics', isAcademic: false, categories: ['extracurriculars', 'hobbies'] }
             ],
             
             classes: [
-                {
-                    id: 'class_6', name: 'Class 6 (2026-27)', year: '2026-2027',
-                    subjects: [
-                        { id: 'sub_science', name: 'Science & MDP', description: 'Exploring the world of Science and hands-on multi-disciplinary projects.', projects: [
-                            { title: 'Monginis Cake Factory Visit', desc: 'Educational field trip to understand industrial baking, temperature control, and food hygiene standards. We observed massive ovens and automated mixing machines!', media: [] }
-                        ] },
-                        { id: 'sub_math', name: 'Mathematics', description: 'Exploring numbers, algebra, and geometry through practical applications like Warli art symmetry.', projects: [] },
-                        { id: 'sub_sst', name: 'Social Studies', description: 'Understanding human society, history, geography, and civic responsibility.', projects: [] }
-                    ]
-                }
+                { id: 'class_6', name: 'Class 6', year: '', subjects: [] }
             ],
             categoryNames: {
                 extracurriculars: 'Extracurriculars',
-                hobbies: 'Hobbies & Skills',
-                achievements: 'Achievements',
-                photoFeed: 'My Memories'
+                hobbies: 'Hobbies & Skills'
             },
-            extracurriculars: {
-                'class_6': [{ title: 'Eco Club Member', desc: 'Participated in school tree plantation drives and environmental awareness.' }]
-            },
-            hobbies: {
-                'class_6': [{ title: 'Baking & Cooking', desc: 'Baking cupcakes at home, inspired by our Monginis factory visit!' }]
-            },
-            achievements: {
-                'class_6': [{ title: 'Science Exhibition - 1st Prize', desc: 'Won first prize for designing a working model demonstrating renewable energy.' }]
-            },
-            photoFeed: {
-                'class_6': []
+            contact: {
+                isVisible: true,
+                title: 'Contact Me',
+                subtitle: "Let's connect and stay in touch!",
+                details: [
+                    { id: 'profession', label: 'Profession', value: 'Student', isVisible: true, icon: 'fa-user-graduate' },
+                    { id: 'institute', label: 'Institute', value: 'Nath Valley School', isVisible: true, icon: 'fa-school' },
+                    { id: 'address', label: 'Home Address', value: 'Chhatrapati Sambhajinagar, Maharashtra, India', isVisible: true, icon: 'fa-location-dot' },
+                    { id: 'email', label: 'Email', value: 'hello@example.com', isVisible: true, icon: 'fa-envelope' },
+                    { id: 'phone', label: 'Contact Number', value: '+91 XXXXX XXXXX', isVisible: true, icon: 'fa-phone' }
+                ],
+                socials: [
+                    { id: 'youtube', label: 'YouTube', link: '', isVisible: true, icon: 'fa-youtube', color: 'text-rose-500' },
+                    { id: 'linkedin', label: 'LinkedIn', link: '', isVisible: true, icon: 'fa-linkedin', color: 'text-blue-600' },
+                    { id: 'instagram', label: 'Instagram', link: '', isVisible: true, icon: 'fa-instagram', color: 'text-pink-600' },
+                    { id: 'facebook', label: 'Facebook', link: '', isVisible: true, icon: 'fa-facebook', color: 'text-blue-500' }
+                ]
             }
         };
 
@@ -305,6 +301,11 @@
                             { id: 'sec_beyond', title: 'Beyond Academics', isAcademic: false, categories: ['extracurriculars', 'hobbies', 'achievements', 'photoFeed'] }
                         ];
                     }
+                    // Initialize Contact if missing from older DB
+                    if (!dbData.contact) {
+                        dbData.contact = state.contact;
+                    }
+                    
                     state = { ...state, ...dbData };
                 }
             } catch (e) {
@@ -356,7 +357,9 @@
         async function handleAdminLoginToggle() {
             if (auth.currentUser) {
                 await auth.signOut();
+                state.isEditMode = false;
                 showToast("Logged out successfully");
+                renderApp();
             } else {
                 const email = prompt("Admin Email:");
                 if(!email) return;
@@ -390,6 +393,7 @@
         function handleThumbnailClick() {
             if (state.isSidebarCollapsed && window.innerWidth >= 768) toggleSidebarCollapse(); 
             else if (auth.currentUser) document.getElementById('profile_pic_input').click();
+            else switchView('about');
         }
 
         function handleIconClick(e, actionFn) {
@@ -471,6 +475,14 @@
                     else if (field === 'generic.title') state[ids[0]][ids[1]][ids[2]].title = val;
                     else if (field === 'generic.desc') state[ids[0]][ids[1]][ids[2]].desc = val;
                     
+                    // Contact Info
+                    else if (field === 'contact.title') state.contact.title = val;
+                    else if (field === 'contact.subtitle') state.contact.subtitle = val;
+                    else if (field === 'contactDetail.label') state.contact.details[ids[0]].label = val;
+                    else if (field === 'contactDetail.value') state.contact.details[ids[0]].value = val;
+                    else if (field === 'contactSocial.label') state.contact.socials[ids[0]].label = val;
+                    else if (field === 'contactSocial.link') state.contact.socials[ids[0]].link = val;
+
                     document.querySelectorAll(`[data-sync="${field}_${ids.join('_')}"]`).forEach(el => el.innerText = val);
                     triggerSave();
                 });
@@ -480,24 +492,29 @@
         function renderBreadcrumbs() {
             const bc = document.getElementById('breadcrumb-container');
             const firstName = state.profile.name.split(' ')[0] || 'Amaira';
-            let html = `<span class="cursor-pointer hover:text-slate-900 transition" onclick="switchView('about')"><i class="fa-solid fa-house text-[10px] mr-1"></i>${firstName}</span>`;
+            let html = `<span class="cursor-pointer hover:text-slate-900 transition flex-shrink-0" onclick="switchView('about')"><i class="fa-solid fa-house text-[10px] mr-1"></i>${firstName}</span>`;
             
-            if (state.currentView === 'subject') {
+            if (state.currentView === 'section') {
+                const sec = state.sections.find(s => s.id === state.activeIds.sectionId) || {title: 'Academics'};
+                html += `<span class="mx-2 text-slate-300 flex-shrink-0">/</span><span class="text-slate-900 font-bold flex-shrink-0">${sec.title}</span>`;
+            } else if (state.currentView === 'subject') {
                 const sec = state.sections.find(s => s.id === state.activeIds.sectionId) || {title: 'Academics'};
                 const cls = state.classes.find(c => c.id === state.activeIds.classId);
                 const sub = cls.subjects.find(s => s.id === state.activeIds.subjectId);
-                html += `<span class="mx-2 text-slate-300">/</span><span class="cursor-pointer hover:text-slate-900 transition" onclick="toggleMenuSection('sections', '${sec.id}')">${sec.title}</span>`;
-                html += `<span class="mx-2 text-slate-300">/</span><span class="cursor-pointer hover:text-slate-900 transition" onclick="toggleMenuSection('classes', '${cls.id}')">${cls.name}</span>`;
-                html += `<span class="mx-2 text-slate-300">/</span><span class="text-slate-900 font-bold">${sub.name}</span>`;
+                html += `<span class="mx-2 text-slate-300 flex-shrink-0">/</span><span class="cursor-pointer hover:text-slate-900 transition flex-shrink-0" onclick="switchView('section', '${sec.id}')">${sec.title}</span>`;
+                html += `<span class="mx-2 text-slate-300 flex-shrink-0">/</span><span class="cursor-pointer hover:text-slate-900 transition flex-shrink-0" onclick="toggleMenuSection('classes', '${cls.id}')">${cls.name}</span>`;
+                html += `<span class="mx-2 text-slate-300 flex-shrink-0">/</span><span class="text-slate-900 font-bold flex-shrink-0">${sub.name}</span>`;
             } else if (state.currentView === 'category') {
                 const sec = state.sections.find(s => s.id === state.activeIds.sectionId) || {title: 'Beyond Academics'};
                 const catName = state.categoryNames[state.activeIds.category];
                 const cls = state.classes.find(c => c.id === state.activeIds.classId);
-                html += `<span class="mx-2 text-slate-300">/</span><span class="cursor-pointer hover:text-slate-900 transition" onclick="toggleMenuSection('sections', '${sec.id}')">${sec.title}</span>`;
-                html += `<span class="mx-2 text-slate-300">/</span><span class="cursor-pointer hover:text-slate-900 transition" onclick="toggleMenuSection('categories', '${state.activeIds.category}')">${catName}</span>`;
-                html += `<span class="mx-2 text-slate-300">/</span><span class="text-slate-900 font-bold">${cls.name}</span>`;
+                html += `<span class="mx-2 text-slate-300 flex-shrink-0">/</span><span class="cursor-pointer hover:text-slate-900 transition flex-shrink-0" onclick="switchView('section', '${sec.id}')">${sec.title}</span>`;
+                html += `<span class="mx-2 text-slate-300 flex-shrink-0">/</span><span class="cursor-pointer hover:text-slate-900 transition flex-shrink-0" onclick="toggleMenuSection('categories', '${state.activeIds.category}')">${catName}</span>`;
+                html += `<span class="mx-2 text-slate-300 flex-shrink-0">/</span><span class="text-slate-900 font-bold flex-shrink-0">${cls.name}</span>`;
+            } else if (state.currentView === 'contact') {
+                html += `<span class="mx-2 text-slate-300 flex-shrink-0">/</span><span class="text-slate-900 font-bold flex-shrink-0">${state.contact.title}</span>`;
             } else {
-                html += `<span class="mx-2 text-slate-300">/</span><span class="text-slate-900 font-bold">About Me</span>`;
+                html += `<span class="mx-2 text-slate-300 flex-shrink-0">/</span><span class="text-slate-900 font-bold flex-shrink-0">About Me</span>`;
             }
             bc.innerHTML = html;
         }
@@ -516,16 +533,17 @@
                 
                 html += `
                     <div class="mt-4 mb-1 group relative">
-                        <div class="flex items-center justify-between px-3 cursor-pointer hide-on-collapse" onclick="handleIconClick(event, () => toggleMenuSection('sections', '${sec.id}'))">
+                        <!-- Clicking title opens landing page, clicking chevron collapses menu -->
+                        <div class="flex items-center justify-between px-3 hide-on-collapse cursor-pointer" onclick="handleIconClick(event, () => switchView('section', '${sec.id}'))">
                             <div class="flex items-center w-full min-w-0 pr-2">
-                                <textarea rows="1" data-field="section.title" data-ids="${sec.id}" class="w-full text-[10px] font-extrabold uppercase tracking-widest bg-transparent editable-border resize-none overflow-hidden" style="color: var(--theme-primary);" onclick="event.stopPropagation()">${sec.title}</textarea>
+                                <textarea rows="1" data-field="section.title" data-ids="${sec.id}" class="w-full text-[10px] font-extrabold uppercase tracking-widest bg-transparent editable-border resize-none overflow-hidden cursor-pointer" style="color: var(--theme-primary);" onclick="event.stopPropagation()">${sec.title}</textarea>
                             </div>
-                            <div class="flex items-center space-x-1">
-                                <i class="fa-solid fa-chevron-${isSecCollapsed ? 'down' : 'up'} text-[10px] text-slate-400 transition"></i>
+                            <div class="flex items-center space-x-1 p-1 cursor-pointer" onclick="handleIconClick(event, () => toggleMenuSection('sections', '${sec.id}'))">
+                                <i class="fa-solid fa-chevron-${isSecCollapsed ? 'down' : 'up'} text-[10px] text-slate-400 hover:text-slate-600 transition"></i>
                                 <button onclick="removeSection(event, '${sec.id}')" class="edit-controls-flex text-rose-400 hover:text-rose-600 p-1" title="Delete Section"><i class="fa-solid fa-times text-[10px]"></i></button>
                             </div>
                         </div>
-                        <div class="hidden md:flex center-on-collapse justify-center w-full ${state.isSidebarCollapsed ? '!flex' : '!hidden'}">
+                        <div class="hidden md:flex center-on-collapse justify-center w-full ${state.isSidebarCollapsed ? '!flex' : '!hidden'} cursor-pointer" onclick="switchView('section', '${sec.id}')">
                             <div class="w-6 h-6 rounded bg-slate-100 flex items-center justify-center text-slate-400" title="${sec.title}"><i class="fa-solid fa-layer-group text-[10px]"></i></div>
                         </div>
                         
@@ -607,6 +625,21 @@
             
             html += `<button onclick="addSection()" class="edit-controls-flex w-full items-center justify-center space-x-2 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 py-3 mt-6 rounded-xl hide-on-collapse transition border border-indigo-100"><i class="fa-solid fa-plus"></i><span>New Main Section</span></button>`;
 
+            // Contact Me Menu Link
+            if (state.contact.isVisible || state.isEditMode) {
+                const hiddenClass = !state.contact.isVisible ? 'opacity-60 grayscale' : '';
+                const hideIcon = !state.contact.isVisible ? '<i class="fa-solid fa-eye-slash text-[10px] text-rose-500 edit-controls-block ml-2"></i>' : '';
+                html += `
+                    <div onclick="handleIconClick(event, () => switchView('contact'))" class="mt-6 flex items-center justify-between p-3 rounded-xl cursor-pointer transition ${state.currentView === 'contact' ? 'shadow-md text-white font-bold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'} center-on-collapse ${hiddenClass}" ${state.currentView === 'contact' ? 'style="background-color: var(--theme-primary);"' : ''}>
+                        <div class="flex items-center space-x-3 min-w-0 w-full">
+                            <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${state.currentView === 'contact' ? 'text-white' : 'bg-white shadow-sm text-slate-500'}"><i class="fa-solid fa-address-card text-sm"></i></div>
+                            <textarea rows="1" data-field="contact.title" class="w-full text-sm truncate hide-on-collapse bg-transparent editable-border p-0 resize-none overflow-hidden cursor-pointer ${state.currentView === 'contact' ? 'text-white' : ''}" onclick="event.stopPropagation()">${state.contact.title}</textarea>
+                        </div>
+                        ${hideIcon}
+                    </div>
+                `;
+            }
+
             nav.innerHTML = html;
         }
 
@@ -625,23 +658,169 @@
             void vp.offsetWidth; 
             vp.classList.add('fade-in');
 
+            let contentHtml = '';
             if (state.currentView === 'about') {
-                vp.innerHTML = renderAboutMe();
+                contentHtml = renderAboutMe();
+            } else if (state.currentView === 'section') {
+                const sec = state.sections.find(s => s.id === state.activeIds.sectionId);
+                contentHtml = renderSectionLanding(sec);
             } else if (state.currentView === 'subject') {
                 const cls = state.classes.find(c => c.id === state.activeIds.classId);
                 const sub = cls.subjects.find(s => s.id === state.activeIds.subjectId);
-                vp.innerHTML = renderSubjectView(cls, sub);
+                contentHtml = renderSubjectView(cls, sub);
             } else if (state.currentView === 'category') {
                 const cat = state.activeIds.category;
                 const cls = state.classes.find(c => c.id === state.activeIds.classId);
-                vp.innerHTML = renderCommonCategoryView(cat, cls.id);
+                contentHtml = renderCommonCategoryView(cat, cls.id);
+            } else if (state.currentView === 'contact') {
+                contentHtml = renderContact();
             }
+
+            // Append Global Footer Quicklink if not on contact page
+            vp.innerHTML = contentHtml + (state.currentView !== 'contact' ? renderGlobalFooter() : '');
 
             attachInputListeners();
             updateEditModeUI();
             
             setTimeout(resizeAllTextareas, 50);
             setTimeout(resizeAllTextareas, 200);
+        }
+
+        function renderGlobalFooter() {
+            // Removed redundant global footer button from About Me & other pages as requested
+            return '';
+        }
+
+        function renderSectionLanding(sec) {
+            let cardsHtml = '';
+            if (sec.isAcademic) {
+                state.classes.forEach(cls => {
+                    cardsHtml += `
+                        <div class="glass-card rounded-[2rem] p-6 shadow-sm hover:shadow-lg transition-all duration-300 bg-white border border-slate-100 flex flex-col cursor-pointer group" onclick="toggleShortcut(event, 'landing_class_${cls.id}')">
+                            <div class="flex items-center justify-between">
+                                <h3 class="font-extrabold text-xl text-slate-800 group-hover:text-[var(--theme-primary)] transition-colors">${cls.name}</h3>
+                                <i id="shortcut-icon-landing_class_${cls.id}" class="fa-solid fa-chevron-down text-slate-300 transition-transform duration-300"></i>
+                            </div>
+                            <div id="shortcut-content-landing_class_${cls.id}" class="w-full mt-2 max-h-0 opacity-0 overflow-hidden transition-all duration-300">
+                                <div class="space-y-2 pt-3 border-t border-slate-100 mt-2">
+                                    ${cls.subjects.map(sub => `
+                                        <button onclick="event.stopPropagation(); switchView('subject', '${sec.id}', '${cls.id}', '${sub.id}')" class="w-full text-left p-3 rounded-xl bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-[var(--theme-primary)] transition flex items-center shadow-sm font-bold text-sm">
+                                            <i class="fa-solid fa-book-open text-slate-400 mr-3"></i>
+                                            <span>${sub.name}</span>
+                                        </button>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                (sec.categories || []).forEach(cat => {
+                    let catName = state.categoryNames[cat] || cat;
+                    let icon = cat === 'photoFeed' ? 'fa-images' : (cat === 'achievements' ? 'fa-trophy' : (cat === 'hobbies' ? 'fa-palette' : 'fa-medal'));
+                    let color = cat === 'photoFeed' ? 'text-pink-500' : (cat === 'achievements' ? 'text-amber-500' : (cat === 'hobbies' ? 'text-purple-500' : 'text-emerald-500'));
+                    
+                    cardsHtml += `
+                        <div class="glass-card rounded-[2rem] p-6 shadow-sm hover:shadow-lg transition-all duration-300 bg-white border border-slate-100 flex flex-col items-center text-center cursor-pointer group" onclick="toggleShortcut(event, 'landing_${cat}')">
+                            <div class="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mb-4 shadow-inner group-hover:scale-110 transition-transform">
+                                <i class="fa-solid ${icon} ${color} text-3xl"></i>
+                            </div>
+                            <h3 class="font-extrabold text-lg text-slate-800 mb-2">${catName}</h3>
+                            <div id="shortcut-content-landing_${cat}" class="w-full space-y-2 mt-2 max-h-0 opacity-0 overflow-hidden transition-all duration-300">
+                                ${state.classes.map(cls => `
+                                    <button onclick="event.stopPropagation(); switchView('category', '${sec.id}', '${cls.id}', null, '${cat}')" class="w-full text-left p-2.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-[var(--theme-primary)] transition flex items-center text-xs font-semibold shadow-sm">
+                                        <i class="fa-regular fa-folder text-slate-400 mr-2"></i>
+                                        <span>${cls.name}</span>
+                                    </button>
+                                `).join('')}
+                            </div>
+                            <i id="shortcut-icon-landing_${cat}" class="fa-solid fa-chevron-down text-slate-300 mt-2 transition-transform duration-300"></i>
+                        </div>
+                    `;
+                });
+            }
+
+            return `
+                <div class="max-w-5xl mx-auto space-y-8 min-w-0 pb-10">
+                    <div class="glass-card p-8 md:p-10 rounded-[2.5rem] shadow-md flex items-center gap-4" style="background: var(--theme-gradient); color: white;">
+                        <textarea rows="1" data-field="section.title" data-ids="${sec.id}" class="w-full text-4xl md:text-5xl font-extrabold bg-transparent editable-border py-1 resize-none overflow-hidden leading-tight text-white placeholder-white/50">${sec.title}</textarea>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        ${cardsHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderContact() {
+            return `
+                <div class="max-w-4xl mx-auto space-y-8 min-w-0 pb-10">
+                    <!-- Header -->
+                    <div class="glass-card p-8 md:p-10 rounded-[2.5rem] shadow-sm relative flex flex-col md:flex-row md:items-center justify-between gap-4" style="background: var(--theme-gradient); color: white;">
+                        <div class="flex-1 min-w-0">
+                            <textarea rows="1" data-field="contact.title" class="w-full text-4xl md:text-5xl font-extrabold bg-transparent editable-border py-1 resize-none overflow-hidden leading-tight text-white placeholder-white/50">${state.contact.title}</textarea>
+                            <textarea rows="1" data-field="contact.subtitle" class="w-full text-lg md:text-xl font-medium mt-2 bg-transparent editable-border py-1 resize-none overflow-hidden text-blue-100 placeholder-white/50">${state.contact.subtitle}</textarea>
+                        </div>
+                        <button onclick="toggleContactVisibility()" class="edit-controls-flex text-white px-5 py-3 rounded-2xl text-sm font-bold shadow-lg transition-all items-center space-x-2 flex-shrink-0 bg-black/20 hover:bg-black/30 backdrop-blur-md">
+                            <i class="fa-solid ${state.contact.isVisible ? 'fa-eye' : 'fa-eye-slash'}"></i>
+                            <span>${state.contact.isVisible ? 'Page Visible' : 'Page Hidden'}</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Contact Details Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        ${state.contact.details.map((detail, idx) => `
+                            <div class="glass-card rounded-[2rem] p-6 shadow-sm bg-white border border-slate-100 relative group ${!detail.isVisible ? 'edit-mode-hidden-item' : ''}" style="${!detail.isVisible && !state.isEditMode ? 'display:none;' : ''}">
+                                <button onclick="toggleContactItem('details', ${idx})" class="edit-controls-flex absolute top-4 right-4 text-slate-400 hover:text-slate-600 bg-slate-50 p-2 rounded-xl transition" title="Toggle Visibility">
+                                    <i class="fa-solid ${detail.isVisible ? 'fa-eye' : 'fa-eye-slash'}"></i>
+                                </button>
+                                
+                                <div class="flex items-start space-x-4">
+                                    <div class="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center flex-shrink-0" style="color: var(--theme-primary);">
+                                        <i class="fa-solid ${detail.icon} text-xl"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0 pr-6">
+                                        <textarea rows="1" data-field="contactDetail.label" data-ids="${idx}" class="w-full text-xs font-bold text-slate-400 uppercase tracking-wider bg-transparent editable-border p-0 resize-none overflow-hidden">${detail.label}</textarea>
+                                        <textarea rows="2" data-field="contactDetail.value" data-ids="${idx}" class="w-full text-base font-semibold text-slate-800 bg-transparent editable-border py-1 mt-1 resize-none overflow-hidden leading-snug">${detail.value}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <!-- Social Media Links -->
+                    <h3 class="text-xl font-extrabold text-slate-800 px-2 mt-10">Connect Online</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        ${state.contact.socials.map((social, idx) => `
+                            <div class="glass-card rounded-[1.5rem] p-5 shadow-sm bg-white border border-slate-100 relative group flex flex-col items-center text-center ${!social.isVisible ? 'edit-mode-hidden-item' : ''}" style="${!social.isVisible && !state.isEditMode ? 'display:none;' : ''}">
+                                <button onclick="toggleContactItem('socials', ${idx})" class="edit-controls-flex absolute top-3 right-3 text-slate-400 hover:text-slate-600 bg-slate-50 p-2 rounded-xl transition">
+                                    <i class="fa-solid ${social.isVisible ? 'fa-eye' : 'fa-eye-slash'}"></i>
+                                </button>
+                                <i class="fa-brands ${social.icon} text-3xl ${social.color} mb-3 mt-2"></i>
+                                <textarea rows="1" data-field="contactSocial.label" data-ids="${idx}" class="w-full text-sm font-extrabold text-slate-800 text-center bg-transparent editable-border p-0 resize-none overflow-hidden">${social.label}</textarea>
+                                
+                                ${state.isEditMode ? `
+                                    <input type="text" data-field="contactSocial.link" data-ids="${idx}" class="w-full text-[10px] text-slate-500 text-center bg-slate-50 editable-border py-1.5 px-2 rounded mt-2 border border-slate-200" placeholder="Paste URL here..." value="${social.link}">
+                                ` : `
+                                    ${social.link ? `<a href="${social.link}" target="_blank" class="mt-2 text-xs font-bold px-5 py-1.5 rounded-full shadow-sm hover:shadow-md hover:scale-105 transition inline-block text-white" style="background: var(--theme-gradient);">Visit <i class="fa-solid fa-arrow-up-right-from-square text-[9px] ml-1"></i></a>` : `<span class="mt-2 text-[10px] text-slate-400">No link added</span>`}
+                                `}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleContactVisibility() {
+            state.contact.isVisible = !state.contact.isVisible;
+            triggerSave();
+            renderApp();
+        }
+
+        function toggleContactItem(type, idx) {
+            state.contact[type][idx].isVisible = !state.contact[type][idx].isVisible;
+            triggerSave();
+            renderApp();
         }
 
         function renderAboutMe() {
@@ -718,6 +897,23 @@
                 }
             });
 
+            // Contact Quicklink 
+            if (state.contact.isVisible || state.isEditMode) {
+                const hiddenClass = !state.contact.isVisible ? 'edit-mode-hidden-item' : '';
+                quickLinksCardsHtml += `
+                    <div class="glass-card rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col bg-white overflow-hidden ${hiddenClass}" style="${!state.contact.isVisible && !state.isEditMode ? 'display:none;' : ''}">
+                        <div onclick="switchView('contact')" class="cursor-pointer p-4 md:p-5 flex flex-col items-center justify-center text-center aspect-square group relative hover:bg-slate-50 transition-colors">
+                            <div class="w-14 h-14 md:w-16 md:h-16 rounded-[1.25rem] bg-slate-50 flex items-center justify-center mb-2 md:mb-3 group-hover:scale-110 transition-transform shadow-inner flex-shrink-0" style="color: var(--theme-primary);">
+                                <i class="fa-solid fa-address-card text-2xl md:text-3xl"></i>
+                            </div>
+                            <div class="flex items-center justify-center space-x-1.5 w-full px-1">
+                                <span class="font-extrabold text-slate-800 text-xs md:text-sm leading-snug break-words text-center">${state.contact.title}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
             return `
                 <div class="max-w-6xl mx-auto space-y-10 min-w-0 pb-10">
                     <div class="flex flex-col md:flex-row glass-card rounded-[2.5rem] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.06)] min-h-[450px]">
@@ -768,15 +964,15 @@
 
                     <div class="flex flex-col space-y-10">
                         ${projects.map((proj, idx) => {
-                            const cKey = `${cls.id}_${sub.id}_${idx}`;
-                            const mediaHtml = renderCarousel(proj.media || [], `project.${cKey}`, `proj_media_${cKey}`);
+                            const cKey = `${cls.id}|${sub.id}|${idx}`;
+                            const mediaHtml = renderCarousel(proj.media || [], `project.${cKey}`, `proj_media_${cKey.replace(/\|/g, '_')}`);
                             const reverseClass = idx % 2 !== 0 ? 'md:flex-row-reverse' : 'md:flex-row';
                             
                             return `
                                 <div class="glass-card rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-md transition-shadow relative flex flex-col ${reverseClass} group min-w-0 bg-white border border-slate-100">
                                     <div class="relative hide-if-no-media bg-slate-50 w-full md:w-[45%] min-h-[300px] flex-shrink-0">
                                         ${mediaHtml}
-                                        <input type="file" id="proj_media_${cKey}" class="hidden" accept="image/*" multiple onchange="handleMediaUpload(event, 'project', '${cls.id}', '${sub.id}', ${idx})">
+                                        <input type="file" id="proj_media_${cKey.replace(/\|/g, '_')}" class="hidden" accept="image/*" multiple onchange="handleMediaUpload(event, 'project', '${cls.id}', '${sub.id}', ${idx})">
                                     </div>
                                     <div class="p-8 md:p-10 flex flex-col justify-center min-w-0 w-full">
                                         <div class="flex items-start justify-between gap-4 min-w-0 mb-4">
@@ -881,8 +1077,12 @@
         function renderCarousel(mediaArr, context, inputId) {
             if (!mediaArr || mediaArr.length === 0) {
                 return `
-                    <div class="edit-controls-flex w-full h-full min-h-[250px] border-2 border-dashed rounded-[2rem] md:rounded-l-[2.5rem] md:rounded-tr-none items-center justify-center bg-slate-50 cursor-pointer hover:bg-slate-100 transition m-4 mx-auto max-w-[90%]" style="border-color: var(--theme-border);" onclick="document.getElementById('${inputId}').click()">
-                        <div class="text-center" style="color: var(--theme-primary);"><i class="fa-solid fa-cloud-arrow-up text-4xl mb-3"></i><p class="text-sm font-bold">Upload Photos or Add Video</p></div>
+                    <div class="edit-controls-flex w-full h-full min-h-[250px] border-2 border-dashed rounded-[2rem] md:rounded-l-[2.5rem] md:rounded-tr-none flex-col items-center justify-center bg-slate-50 cursor-pointer hover:bg-slate-100 transition m-4 mx-auto max-w-[90%]" style="border-color: var(--theme-border);" onclick="document.getElementById('${inputId}').click()">
+                        <div class="text-center" style="color: var(--theme-primary);"><i class="fa-solid fa-cloud-arrow-up text-4xl mb-3"></i><p class="text-sm font-bold">Upload Media</p></div>
+                        <div class="flex space-x-2 mt-4 z-10">
+                            <button onclick="event.stopPropagation(); document.getElementById('${inputId}').click()" class="px-4 py-2 text-white rounded-xl text-xs font-bold hover:scale-105 transition shadow-sm" style="background: var(--theme-gradient);">Photo</button>
+                            <button onclick="event.stopPropagation(); ${context === 'about.media' ? 'addAboutVideo()' : `addProjectVideoFromCarousel('${context}')`}" class="px-4 py-2 bg-rose-500 text-white rounded-xl text-xs font-bold hover:scale-105 transition shadow-sm"><i class="fa-brands fa-youtube mr-1"></i>Video</button>
+                        </div>
                     </div>`;
             }
 
@@ -910,6 +1110,7 @@
                     
                     <div class="edit-controls-flex absolute top-4 right-4 space-x-2 z-10">
                         <button onclick="document.getElementById('${inputId}').click()" class="bg-white w-10 h-10 rounded-xl shadow-lg flex items-center justify-center hover:scale-105 transition" style="color: var(--theme-primary);" title="Add Photo"><i class="fa-solid fa-camera text-sm"></i></button>
+                        <button onclick="${context === 'about.media' ? 'addAboutVideo()' : `addProjectVideoFromCarousel('${context}')`}" class="bg-white w-10 h-10 rounded-xl shadow-lg flex items-center justify-center hover:scale-105 transition text-rose-500" title="Add Video"><i class="fa-brands fa-youtube text-sm"></i></button>
                         <button onclick="removeMedia('${context}')" class="bg-white text-rose-500 w-10 h-10 rounded-xl shadow-lg flex items-center justify-center hover:scale-105 transition" title="Remove"><i class="fa-solid fa-trash text-sm"></i></button>
                     </div>
                     
@@ -989,14 +1190,10 @@
                 state.about.media.splice(idx, 1);
                 state['idx_about.media'] = 0;
             } else if (context.startsWith('project.')) {
-                const cleanContext = context.replace('project.', '');
-                const lastUnderscore = cleanContext.lastIndexOf('_');
-                const parentPath = cleanContext.substring(0, lastUnderscore); 
-                const pIdx = parseInt(cleanContext.substring(lastUnderscore + 1));
-                
-                const firstUnderscore = parentPath.indexOf('_');
-                const classId = parentPath.substring(0, firstUnderscore);
-                const subjectId = parentPath.substring(firstUnderscore + 1);
+                const parts = context.replace('project.', '').split('|');
+                const classId = parts[0];
+                const subjectId = parts[1];
+                const pIdx = parseInt(parts[2]);
                 
                 const cls = state.classes.find(c => c.id === classId);
                 if (cls) {
@@ -1124,6 +1321,20 @@
                 });
             });
         }
+        
+        function addAboutVideo() {
+            const url = prompt("Paste YouTube URL or Shorts Link:");
+            if(!url) return;
+            let embedUrl = url;
+            if(url.includes('watch?v=')) embedUrl = url.replace('watch?v=', 'embed/');
+            else if(url.includes('youtu.be/')) embedUrl = url.replace('youtu.be/', 'youtube.com/embed/');
+            else if(url.includes('shorts/')) embedUrl = url.replace('shorts/', 'embed/');
+            
+            if(!state.about.media) state.about.media = [];
+            state.about.media.push({ type: 'video', url: embedUrl });
+            triggerSave(); 
+            renderApp();
+        }
 
         function addProjectVideo(cId, sId, pIdx) {
             const url = prompt("Paste YouTube URL or Shorts Link:");
@@ -1139,6 +1350,16 @@
             sub.projects[pIdx].media.push({ type: 'video', url: embedUrl });
             triggerSave();
             renderApp();
+        }
+
+        function addProjectVideoFromCarousel(context) {
+            if (context.startsWith('project.')) {
+                const parts = context.replace('project.', '').split('|');
+                const classId = parts[0];
+                const subjectId = parts[1];
+                const pIdx = parseInt(parts[2]);
+                addProjectVideo(classId, subjectId, pIdx);
+            }
         }
 
         function addFeedVideo(category, classId) {
