@@ -5,16 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Amaira's Digital Portfolio</title>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <!-- Firebase SDKs -->
+    
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -30,7 +24,6 @@
             appId: "1:1057573972585:web:757e24c3dafd8d27b450f8"
         };
         
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
@@ -42,30 +35,25 @@
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
         
-        /* Premium Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #93c5fd; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #3b82f6; }
 
-        /* Edit Mode Logic */
         .edit-controls-flex { display: none !important; }
         .edit-controls-block { display: none !important; }
         body.edit-mode .edit-controls-flex { display: flex !important; }
         body.edit-mode .edit-controls-block { display: block !important; }
         
-        /* Editable Borders */
         body:not(.edit-mode) .editable-border { border: 1px solid transparent !important; pointer-events: none; }
         body.edit-mode .editable-border { border: 1px dashed #94a3b8 !important; border-radius: 0.5rem; transition: all 0.2s; }
         body.edit-mode .editable-border:focus { border-color: #2563eb !important; background: #f8fafc; outline: none; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
 
-        /* Hide completely empty fields in view mode */
         body:not(.edit-mode) textarea:placeholder-shown,
         body:not(.edit-mode) input:placeholder-shown,
         body:not(.edit-mode) .hide-if-empty:empty,
         body:not(.edit-mode) .hide-if-no-media:not(:has(img)):not(:has(iframe)) { display: none !important; }
 
-        /* Sidebar & Transitions */
         #app-sidebar { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         #app-sidebar.collapsed { width: 5.5rem; }
         #app-sidebar.collapsed .hide-on-collapse { display: none; opacity: 0; }
@@ -92,22 +80,18 @@
 
 <body class="text-slate-800 flex h-screen overflow-hidden bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-100 via-slate-50 to-white selection:bg-blue-200">
 
-    <!-- GLOBAL LOADING SCREEN (Fixes the default ghost image flash!) -->
     <div id="global-loader" class="fixed inset-0 bg-slate-50 z-[99999] flex flex-col items-center justify-center transition-opacity duration-500">
         <div class="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin shadow-sm"></div>
         <p class="mt-4 font-bold text-slate-600 tracking-wide text-sm animate-pulse">Loading Portfolio...</p>
     </div>
 
-    <!-- Mobile Overlay -->
     <div id="mobile-sidebar-overlay" class="mobile-overlay" onclick="toggleMobileMenu()"></div>
 
-    <!-- Toast Notification -->
     <div id="toast-notification" class="fixed bottom-6 right-6 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center space-x-3 text-sm font-medium border border-slate-700">
         <i class="fa-solid fa-circle-info text-blue-400" id="toast-icon"></i>
         <span id="toast-msg">Action successful</span>
     </div>
 
-    <!-- Sidebar -->
     <aside id="app-sidebar" class="glass-card border-r border-slate-200/50 flex flex-col w-[19rem] flex-shrink-0 relative shadow-[4px_0_24px_rgba(37,99,235,0.05)] z-40">
         <div class="p-6 flex flex-col items-center border-b border-slate-100/50 relative group">
             <button onclick="toggleSidebarCollapse()" class="hidden md:flex absolute -right-3.5 top-10 bg-white border border-blue-100 text-blue-500 hover:text-blue-700 hover:bg-blue-50 w-7 h-7 rounded-full items-center justify-center shadow-md z-10 transition-all">
@@ -138,7 +122,6 @@
         </div>
     </aside>
 
-    <!-- Main Content -->
     <main class="flex-1 flex flex-col h-full overflow-hidden relative min-w-0">
         <header class="h-16 glass-card border-b border-slate-200/50 px-4 md:px-8 flex items-center justify-between flex-shrink-0 z-10 relative">
             <div class="flex items-center space-x-3 min-w-0">
@@ -177,7 +160,7 @@
                 title: 'Hello! I am Amaira.', 
                 subtitle: 'Welcome to my digital portfolio!', 
                 bio: 'I am an enthusiastic student exploring the wonders of Science, participating in school activities, and learning new skills every day!',
-                media: [] // Default dummy images removed for a clean start
+                media: [] 
             },
             classes: [
                 {
@@ -203,7 +186,7 @@
             if (user) {
                 state.isEditMode = true;
             } else {
-                state.isEditMode = false; // Locks out edit mode instantly
+                state.isEditMode = false;
             }
             loadFromFirebase(); 
             updateEditModeUI();
@@ -215,6 +198,13 @@
                 const docSnap = await docRef.get();
                 if (docSnap.exists) {
                     let dbData = docSnap.data();
+                    
+                    // PREVENT FIREBASE FROM OVERWRITING YOUR LANDING PAGE
+                    delete dbData.currentView;
+                    delete dbData.activeIds;
+                    delete dbData.isEditMode;
+                    delete dbData.isSidebarCollapsed;
+
                     ['extracurriculars', 'hobbies', 'achievements', 'photoFeed'].forEach(cat => {
                         if (dbData[cat] && Array.isArray(dbData[cat])) {
                             let migrated = {};
@@ -229,7 +219,6 @@
                 console.error("Error loading data:", e);
             } finally {
                 renderApp(); 
-                // Hide the loader smoothly once the real cloud data has rendered
                 const loader = document.getElementById('global-loader');
                 if(loader) {
                     loader.style.opacity = '0';
@@ -580,7 +569,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                         ${projects.map((proj, idx) => {
                             const idKey = `${cls.id}_${sub.id}_${idx}`;
-                            const contextKey = `project|${cls.id}|${sub.id}|${idx}`; // Using pipe '|' to fix deletion bug!
+                            const contextKey = `project|${cls.id}|${sub.id}|${idx}`; 
                             const mediaHtml = renderCarousel(proj.media || [], contextKey, `proj_media_${idKey}`);
                             return `
                                 <div class="glass-card rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-md transition-shadow relative flex flex-col group min-w-0 bg-white">
@@ -737,7 +726,7 @@
             }
 
             return `
-                <div class="carousel-container relative w-full h-full min-h-[300px] md:min-h-full group rounded-t-[2.5rem] md:rounded-l-[2.5rem] md:rounded-tr-none overflow-hidden bg-slate-900" data-context="${context}" data-images="${safeImages}" data-index="${currentIdx}">
+                <div class="carousel-container relative w-full h-full min-h-[300px] md:min-h-full group rounded-t-[2.5rem] md:rounded-l-[2.5rem] md:rounded-tr-none overflow-hidden bg-slate-900" data-context="${context}" data-images="${safeImages}" data-index="${currentIdx}" data-input="${inputId}">
                     ${mediaDisplayHtml}
                     <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                     
@@ -755,6 +744,63 @@
                     ` : ''}
                 </div>
             `;
+        }
+
+        setInterval(() => {
+            if(state.isEditMode) return;
+            document.querySelectorAll('.carousel-container').forEach(container => {
+                try {
+                    const imagesStr = container.getAttribute('data-images');
+                    if(!imagesStr) return;
+                    
+                    const images = JSON.parse(imagesStr.replace(/&quot;/g, '"'));
+                    if (images.length > 1) {
+                        let idx = parseInt(container.getAttribute('data-index'));
+                        idx = (idx + 1) % images.length;
+                        
+                        container.setAttribute('data-index', idx);
+                        const currentItem = images[idx];
+                        const inputId = container.getAttribute('data-input') || 'temp_input';
+                        
+                        if (typeof currentItem === 'object' && currentItem.type === 'video') {
+                            container.outerHTML = renderCarousel(images, container.getAttribute('data-context'), inputId);
+                        } else {
+                            const imgEl = container.querySelector('.carousel-img');
+                            if(imgEl) {
+                                imgEl.style.opacity = '0.7';
+                                setTimeout(() => {
+                                    imgEl.src = typeof currentItem === 'string' ? currentItem : currentItem.url;
+                                    imgEl.style.opacity = '1';
+                                }, 150);
+                            } else {
+                                container.outerHTML = renderCarousel(images, container.getAttribute('data-context'), inputId);
+                            }
+                        }
+                        
+                        const dots = container.querySelectorAll('.carousel-dot');
+                        dots.forEach((dot, i) => {
+                            dot.className = `carousel-dot w-2 h-2 rounded-full transition-all duration-300 ${i === idx ? 'bg-white scale-125' : 'bg-white/40'}`;
+                        });
+                        
+                        const context = container.getAttribute('data-context');
+                        state[`idx_${context}`] = idx;
+                    }
+                } catch(e) { console.error("Slideshow error", e); }
+            });
+        }, 5000);
+
+        function manualChangeSlide(context, dir) {
+            const el = document.querySelector(`[data-context="${context}"]`);
+            if(!el) return;
+            const images = JSON.parse(el.getAttribute('data-images').replace(/&quot;/g, '"'));
+            const inputId = el.getAttribute('data-input') || 'temp_input';
+            
+            let curr = state[`idx_${context}`] || 0;
+            curr = (curr + dir + images.length) % images.length;
+            state[`idx_${context}`] = curr;
+            
+            // Re-render ONLY the carousel locally instead of refreshing the entire page
+            el.outerHTML = renderCarousel(images, context, inputId);
         }
 
         function toggleShortcut(e, cat) {
@@ -776,64 +822,12 @@
             }
         }
 
-        setInterval(() => {
-            if(state.isEditMode) return;
-            document.querySelectorAll('.carousel-container').forEach(container => {
-                try {
-                    const imagesStr = container.getAttribute('data-images');
-                    if(!imagesStr) return;
-                    
-                    const images = JSON.parse(imagesStr.replace(/&quot;/g, '"'));
-                    if (images.length > 1) {
-                        let idx = parseInt(container.getAttribute('data-index'));
-                        idx = (idx + 1) % images.length;
-                        
-                        container.setAttribute('data-index', idx);
-                        const currentItem = images[idx];
-                        
-                        if (typeof currentItem === 'object' && currentItem.type === 'video') {
-                            container.innerHTML = renderCarousel(images, container.getAttribute('data-context'), 'temp_input');
-                        } else {
-                            const imgEl = container.querySelector('.carousel-img');
-                            if(imgEl) {
-                                imgEl.style.opacity = '0.7';
-                                setTimeout(() => {
-                                    imgEl.src = typeof currentItem === 'string' ? currentItem : currentItem.url;
-                                    imgEl.style.opacity = '1';
-                                }, 150);
-                            }
-                        }
-                        
-                        const dots = container.querySelectorAll('.carousel-dot');
-                        dots.forEach((dot, i) => {
-                            dot.className = `carousel-dot w-2 h-2 rounded-full transition-all duration-300 ${i === idx ? 'bg-white scale-125' : 'bg-white/40'}`;
-                        });
-                        
-                        const context = container.getAttribute('data-context');
-                        state[`idx_${context}`] = idx;
-                    }
-                } catch(e) { console.error("Slideshow error", e); }
-            });
-        }, 5000);
-
-        function manualChangeSlide(context, dir) {
-            const el = document.querySelector(`[data-context="${context}"]`);
-            if(!el) return;
-            const images = JSON.parse(el.getAttribute('data-images').replace(/&quot;/g, '"'));
-            
-            let curr = state[`idx_${context}`] || 0;
-            curr = (curr + dir + images.length) % images.length;
-            state[`idx_${context}`] = curr;
-            renderApp();
-        }
-
         function removeMedia(context) {
             const idx = state[`idx_${context}`] || 0;
             if (context === 'about.media') {
                 state.about.media.splice(idx, 1);
                 state['idx_about.media'] = 0;
             } else if (context.startsWith('project|')) {
-                // FIXED PARSING: Split using straight pipe '|' so extra underscores don't break the code
                 const parts = context.split('|');
                 const classId = parts[1];
                 const subjectId = parts[2];
@@ -1054,8 +1048,6 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            // ONLY set the default state to 'about'. 
-            // DO NOT render the dummy blueprint! The Firebase loader handles the initial render.
             if (!state.currentView || state.currentView === 'subject' || state.currentView === 'category') {
                 state.currentView = 'about';
             }
