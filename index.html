@@ -5,10 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Amaira's Digital Portfolio</title>
     
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -28,23 +34,28 @@
         const db = firebase.firestore();
         const auth = firebase.auth();
 
-        // 2. PASTE YOUR IMGBB API KEY HERE (To bypass Google's storage limits)
+        // 2. PASTE YOUR IMGBB API KEY HERE
         const IMGBB_API_KEY = "a6c8e02c15899509447d65b571eefb92";
     </script>
 
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
         
+        /* Premium Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #93c5fd; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #3b82f6; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+        /* Edit Mode Logic */
         .edit-controls-flex { display: none !important; }
         .edit-controls-block { display: none !important; }
         body.edit-mode .edit-controls-flex { display: flex !important; }
         body.edit-mode .edit-controls-block { display: block !important; }
         
+        /* Editable Borders */
         body:not(.edit-mode) .editable-border { border: 1px solid transparent !important; pointer-events: none; }
         body.edit-mode .editable-border { border: 1px dashed #94a3b8 !important; border-radius: 0.5rem; transition: all 0.2s; }
         body.edit-mode .editable-border:focus { border-color: #2563eb !important; background: #f8fafc; outline: none; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
@@ -54,6 +65,7 @@
         body:not(.edit-mode) .hide-if-empty:empty,
         body:not(.edit-mode) .hide-if-no-media:not(:has(img)):not(:has(iframe)) { display: none !important; }
 
+        /* Sidebar Logic */
         #app-sidebar { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         #app-sidebar.collapsed { width: 5.5rem; }
         #app-sidebar.collapsed .hide-on-collapse { display: none; opacity: 0; }
@@ -68,104 +80,134 @@
             .mobile-overlay.show { display: block; }
         }
 
+        /* Animations */
         #toast-notification { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s; transform: translateY(100px); opacity: 0; z-index: 99999; }
         #toast-notification.show { transform: translateY(0); opacity: 1; }
 
         .fade-in { animation: fadeIn 0.4s ease forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
+        .wave-emoji { display: inline-block; animation: wave 2.5s infinite; transform-origin: 70% 70%; }
+        @keyframes wave { 0% { transform: rotate( 0.0deg) } 10% { transform: rotate(14.0deg) } 20% { transform: rotate(-8.0deg) } 30% { transform: rotate(14.0deg) } 40% { transform: rotate(-4.0deg) } 50% { transform: rotate(10.0deg) } 60% { transform: rotate( 0.0deg) } 100% { transform: rotate( 0.0deg) } }
+
+        /* Premium Glass & Tree Menu */
         .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.5); }
+        .tree-line { position: relative; }
+        .tree-line::before { content: ''; position: absolute; left: 19px; top: 0; bottom: 0; width: 2px; background: #e2e8f0; border-radius: 2px; z-index: 0; }
+        .tree-item { position: relative; z-index: 1; }
     </style>
 </head>
 
 <body class="text-slate-800 flex h-screen overflow-hidden bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-100 via-slate-50 to-white selection:bg-blue-200">
 
+    <!-- Global Loader -->
     <div id="global-loader" class="fixed inset-0 bg-slate-50 z-[99999] flex flex-col items-center justify-center transition-opacity duration-500">
         <div class="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin shadow-sm"></div>
         <p class="mt-4 font-bold text-slate-600 tracking-wide text-sm animate-pulse">Loading Portfolio...</p>
     </div>
 
+    <!-- Mobile Overlay -->
     <div id="mobile-sidebar-overlay" class="mobile-overlay" onclick="toggleMobileMenu()"></div>
 
+    <!-- Toast Notification -->
     <div id="toast-notification" class="fixed bottom-6 right-6 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center space-x-3 text-sm font-medium border border-slate-700">
-        <i class="fa-solid fa-circle-info text-blue-400" id="toast-icon"></i>
+        <i class="fa-solid fa-circle-check text-emerald-400"></i>
         <span id="toast-msg">Action successful</span>
     </div>
 
-    <aside id="app-sidebar" class="glass-card border-r border-slate-200/50 flex flex-col w-[19rem] flex-shrink-0 relative shadow-[4px_0_24px_rgba(37,99,235,0.05)] z-40">
-        <div class="p-6 flex flex-col items-center border-b border-slate-100/50 relative group">
+    <!-- Sidebar -->
+    <aside id="app-sidebar" class="glass-card border-r border-slate-200/50 flex flex-col w-[20rem] flex-shrink-0 relative shadow-[4px_0_24px_rgba(37,99,235,0.05)] z-40">
+        
+        <!-- Profile Section -->
+        <div class="p-6 pb-4 flex flex-col items-center border-b border-slate-100/50 relative group">
             <button onclick="toggleSidebarCollapse()" class="hidden md:flex absolute -right-3.5 top-10 bg-white border border-blue-100 text-blue-500 hover:text-blue-700 hover:bg-blue-50 w-7 h-7 rounded-full items-center justify-center shadow-md z-10 transition-all">
                 <i class="fa-solid fa-chevron-left text-[10px]" id="collapse-icon"></i>
             </button>
             
             <div class="relative cursor-pointer transition-transform hover:scale-105" onclick="handleThumbnailClick()">
-                <img id="sidebar-profile-pic" src="https://ui-avatars.com/api/?name=Amaira+Mulay&background=bfdbfe&color=1e3a8a" class="w-20 h-20 rounded-[1.25rem] object-cover shadow-lg border-2 border-white" alt="Amaira">
-                <div class="edit-controls-flex absolute inset-0 bg-black/40 rounded-[1.25rem] items-center justify-center opacity-0 group-hover:opacity-100 transition">
-                    <i class="fa-solid fa-camera text-white text-lg"></i>
+                <img id="sidebar-profile-pic" src="https://ui-avatars.com/api/?name=Amaira+Mulay&background=bfdbfe&color=1e3a8a" class="w-16 h-16 rounded-2xl object-cover shadow-lg border-2 border-white" alt="Amaira">
+                <div class="edit-controls-flex absolute inset-0 bg-black/40 rounded-2xl items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                    <i class="fa-solid fa-camera text-white text-sm"></i>
                 </div>
             </div>
             <input type="file" id="profile_pic_input" class="hidden" accept="image/*" onchange="handleProfilePicUpload(event)">
             
-            <div class="mt-4 text-center hide-on-collapse w-full min-w-0">
-                <textarea rows="1" data-field="profile.name" class="w-full text-center text-xl font-extrabold text-slate-900 bg-transparent editable-border p-1 resize-none overflow-hidden" placeholder="Name">Amaira Mulay</textarea>
-                <textarea rows="1" data-field="profile.grade" class="w-full text-center text-xs font-bold text-blue-600 uppercase tracking-widest bg-transparent editable-border p-1 resize-none overflow-hidden mt-0.5" placeholder="Grade">Class 6 • NVS</textarea>
+            <div class="mt-3 text-center hide-on-collapse w-full min-w-0">
+                <textarea rows="1" data-field="profile.name" class="w-full text-center text-lg font-extrabold text-slate-900 bg-transparent editable-border p-1 resize-none overflow-hidden" placeholder="Name">Amaira Mulay</textarea>
+                <textarea rows="1" data-field="profile.grade" class="w-full text-center text-[10px] font-bold text-blue-600 uppercase tracking-widest bg-transparent editable-border p-0.5 resize-none overflow-hidden mt-0.5" placeholder="Grade">Class 6 • NVS</textarea>
             </div>
         </div>
 
-        <nav class="flex-1 overflow-y-auto p-4 space-y-1 scroll-smooth" id="sidebar-nav"></nav>
+        <!-- Navigation Menu (Dynamic Tree) -->
+        <nav class="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth hide-scrollbar" id="sidebar-nav"></nav>
 
-        <div class="p-4 border-t border-slate-100/50 bg-white/50 flex flex-col space-y-2">
-            <button onclick="handleAdminLoginToggle()" id="edit-mode-btn" class="w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-xl bg-slate-100/80 text-slate-500 font-bold text-sm transition-all hover:bg-slate-200 shadow-sm">
-                <i class="fa-solid fa-lock"></i>
-                <span class="hide-on-collapse">Admin Login</span>
+        <!-- Minimal Footer with Lock Icon -->
+        <div class="p-4 border-t border-slate-100/50 bg-slate-50/50 flex justify-between items-center hide-on-collapse">
+            <span class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">Amaira's Portfolio</span>
+            <button onclick="handleAdminLoginToggle()" id="admin-lock-btn" class="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all" title="Admin Login">
+                <i class="fa-solid fa-lock text-sm"></i>
             </button>
+        </div>
+        <div class="p-4 border-t border-slate-100/50 bg-slate-50/50 flex justify-center items-center center-on-collapse md:hidden" id="admin-lock-btn-mobile">
+            <button onclick="handleAdminLoginToggle()" class="p-2 text-slate-400 hover:text-blue-500 rounded-lg transition-all"><i class="fa-solid fa-lock text-sm"></i></button>
         </div>
     </aside>
 
+    <!-- Main Content -->
     <main class="flex-1 flex flex-col h-full overflow-hidden relative min-w-0">
-        <header class="h-16 glass-card border-b border-slate-200/50 px-4 md:px-8 flex items-center justify-between flex-shrink-0 z-10 relative">
-            <div class="flex items-center space-x-3 min-w-0">
+        
+        <!-- Breadcrumb Header (Site Map) -->
+        <header class="h-16 glass-card border-b border-slate-200/50 px-4 md:px-6 flex items-center justify-between flex-shrink-0 z-10 relative">
+            <div class="flex items-center space-x-3 min-w-0 flex-1">
                 <button onclick="toggleMobileMenu()" class="md:hidden flex items-center justify-center w-10 h-10 text-slate-600 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition flex-shrink-0">
                     <i class="fa-solid fa-bars text-lg"></i>
                 </button>
-                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center text-blue-600 flex-shrink-0 shadow-inner">
-                    <i id="header-icon" class="fa-solid fa-folder-open text-sm"></i>
+                
+                <!-- Breadcrumbs -->
+                <div class="flex items-center space-x-2 text-xs md:text-sm font-semibold text-slate-500 overflow-x-auto hide-scrollbar whitespace-nowrap" id="breadcrumb-container">
+                    <!-- Injected by JS -->
                 </div>
-                <h2 id="current-page-title" class="text-lg md:text-xl font-extrabold text-slate-800 tracking-tight truncate min-w-0">About Me</h2>
             </div>
             
-            <div class="flex items-center space-x-3 edit-controls-flex flex-shrink-0" id="sync-status-container">
-                <span class="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full border border-blue-200 flex items-center space-x-1.5 whitespace-nowrap shadow-sm">
-                    <i class="fa-solid fa-cloud-arrow-up"></i>
-                    <span class="hidden sm:inline">Synced</span>
+            <div class="flex items-center space-x-3 edit-controls-flex flex-shrink-0 ml-4">
+                <span class="text-[10px] md:text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full border border-blue-200 flex items-center space-x-1.5 shadow-sm">
+                    <i class="fa-solid fa-cloud-arrow-up"></i><span class="hidden sm:inline">Synced</span>
                 </span>
             </div>
         </header>
 
+        <!-- Dynamic Viewport -->
         <div id="main-content-viewport" class="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 lg:p-10 fade-in scroll-smooth">
             <!-- Content Injected via JS -->
         </div>
     </main>
 
     <script>
+        // Default Blueprint State
         let state = {
             isEditMode: false,
             isSidebarCollapsed: false,
             currentView: 'about',
-            activeIds: { classId: null, subjectId: null, category: null },
-            collapsedMenus: { classes: {}, categories: {} },
+            activeIds: { sectionId: null, classId: null, subjectId: null, category: null },
+            collapsedMenus: { sections: {}, categories: {}, classes: {} },
             
             profile: { name: 'Amaira Mulay', grade: 'Class 6 • NVS', pic: '' },
             about: { 
                 title: 'Hello! I am Amaira.', 
                 subtitle: 'Welcome to my digital portfolio!', 
-                bio: 'I am an enthusiastic student exploring the wonders of Science, participating in school activities, and learning new skills every day!',
+                bio: 'I am an enthusiastic 6th-grade student at Nath Valley School in Chhatrapati Sambhajinagar. I love exploring the wonders of Science, participating in school activities, and learning new skills every day! I hope you like my digital portfolio, which will give you a brief about my academics as well as my extra-curricular activities and hobbies.',
                 media: [] 
             },
+            
+            sections: [
+                { id: 'sec_acad', title: 'Academics', isAcademic: true },
+                { id: 'sec_beyond', title: 'Beyond Academics', isAcademic: false, categories: ['extracurriculars', 'hobbies', 'achievements', 'photoFeed'] }
+            ],
+            
             classes: [
                 {
                     id: 'class_6', name: 'Class 6 (2026-27)', year: '2026-2027',
-                    subjects: [{ id: 'sub_science', name: 'Science & MDP', description: '', projects: [] }]
+                    subjects: [{ id: 'sub_science', name: 'Science & MDP', description: 'Exploring the world of Science.', projects: [] }]
                 }
             ],
             categoryNames: {
@@ -173,23 +215,32 @@
                 hobbies: 'Hobbies & Skills',
                 achievements: 'Achievements',
                 photoFeed: 'My Memories'
-            },
-            extracurriculars: { 'class_6': [] },
-            hobbies: { 'class_6': [] },
-            achievements: { 'class_6': [] },
-            photoFeed: { 'class_6': [] }
+            }
         };
 
         const DOC_ID = "AMAIRA_PORTFOLIO_MASTER_DATA_V4";
 
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                state.isEditMode = true;
-            } else {
-                state.isEditMode = false;
+        window.addEventListener('DOMContentLoaded', () => {
+            if (!state.currentView || state.currentView === 'subject' || state.currentView === 'category') {
+                state.currentView = 'about';
             }
-            loadFromFirebase(); 
-            updateEditModeUI();
+            
+            if (typeof auth !== 'undefined') {
+                auth.onAuthStateChanged(user => {
+                    if (user) {
+                        state.isEditMode = true;
+                    } else {
+                        state.isEditMode = false;
+                    }
+                    updateEditModeUI();
+                    
+                    if (document.getElementById('global-loader').style.display === 'none') {
+                        renderApp();
+                    }
+                });
+            }
+            
+            loadFromFirebase();
         });
 
         async function loadFromFirebase() {
@@ -199,13 +250,22 @@
                 if (docSnap.exists) {
                     let dbData = docSnap.data();
                     
-                    // PREVENT FIREBASE FROM OVERWRITING YOUR LANDING PAGE
                     delete dbData.currentView;
                     delete dbData.activeIds;
                     delete dbData.isEditMode;
                     delete dbData.isSidebarCollapsed;
 
-                    ['extracurriculars', 'hobbies', 'achievements', 'photoFeed'].forEach(cat => {
+                    if (!dbData.sections) {
+                        dbData.sections = [
+                            { id: 'sec_acad', title: 'Academics', isAcademic: true },
+                            { id: 'sec_beyond', title: 'Beyond Academics', isAcademic: false, categories: ['extracurriculars', 'hobbies', 'achievements', 'photoFeed'] }
+                        ];
+                    }
+
+                    const categoriesList = [];
+                    dbData.sections.forEach(s => { if(!s.isAcademic && s.categories) categoriesList.push(...s.categories); });
+                    
+                    categoriesList.forEach(cat => {
                         if (dbData[cat] && Array.isArray(dbData[cat])) {
                             let migrated = {};
                             const defaultClassId = dbData.classes && dbData.classes.length > 0 ? dbData.classes[0].id : 'class_6';
@@ -213,11 +273,13 @@
                             dbData[cat] = migrated;
                         }
                     });
+
                     state = { ...state, ...dbData };
                 }
             } catch (e) {
                 console.error("Error loading data:", e);
             } finally {
+                state.currentView = 'about';
                 renderApp(); 
                 const loader = document.getElementById('global-loader');
                 if(loader) {
@@ -232,18 +294,17 @@
             if (!auth.currentUser) return; 
             clearTimeout(saveTimeout);
             
-            const syncContainer = document.getElementById('sync-status-container');
-            if(syncContainer) syncContainer.innerHTML = `<span class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200 flex items-center space-x-1.5 whitespace-nowrap shadow-sm"><i class="fa-solid fa-spinner animate-spin"></i><span class="hidden sm:inline">Saving...</span></span>`;
+            const syncBadge = document.querySelector('header .edit-controls-flex span');
+            if(syncBadge) syncBadge.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i><span class="hidden sm:inline">Saving...</span>`;
 
             saveTimeout = setTimeout(async () => { 
                 try { 
                     await db.collection('portfolioData').doc(DOC_ID).set(state); 
-                    if(syncContainer) syncContainer.innerHTML = `<span class="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full border border-blue-200 flex items-center space-x-1.5 whitespace-nowrap shadow-sm"><i class="fa-solid fa-cloud-arrow-up"></i><span class="hidden sm:inline">Synced</span></span>`;
-                } 
-                catch (e) { 
+                    if(syncBadge) syncBadge.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i><span class="hidden sm:inline">Synced</span>`;
+                } catch (e) { 
                     console.error("Cloud Save Error:", e);
-                    alert("⚠️ CLOUD SAVE FAILED: " + e.message);
-                    if(syncContainer) syncContainer.innerHTML = `<span class="text-xs font-bold text-rose-600 bg-rose-50 px-3 py-1.5 rounded-full border border-rose-200 flex items-center space-x-1.5 whitespace-nowrap shadow-sm"><i class="fa-solid fa-triangle-exclamation"></i><span class="hidden sm:inline">Failed</span></span>`;
+                    alert("⚠️️ CLOUD SAVE FAILED: " + e.message);
+                    if(syncBadge) syncBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-500"></i><span class="hidden sm:inline text-rose-500">Failed</span>`;
                 }
             }, 500);
         }
@@ -298,9 +359,9 @@
             renderSidebarNav();
         }
 
-        function switchView(viewName, classId = null, subjectId = null, category = null) {
+        function switchView(viewName, sectionId = null, classId = null, subjectId = null, category = null) {
             state.currentView = viewName;
-            state.activeIds = { classId, subjectId, category };
+            state.activeIds = { sectionId, classId, subjectId, category };
             if (window.innerWidth < 768) {
                 document.getElementById('app-sidebar').classList.remove('mobile-open');
                 document.getElementById('mobile-sidebar-overlay').classList.remove('show');
@@ -310,36 +371,35 @@
 
         function updateEditModeUI() {
             document.body.classList.toggle('edit-mode', state.isEditMode);
-            const btn = document.getElementById('edit-mode-btn');
-            if (auth.currentUser) {
-                btn.innerHTML = `<i class="fa-solid fa-lock-open text-blue-500"></i><span class="hide-on-collapse">Admin: ON (Logout)</span>`;
-                btn.className = "w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-xl bg-blue-50 text-blue-600 border border-blue-200 font-bold text-sm shadow-sm transition";
-            } else {
-                btn.innerHTML = `<i class="fa-solid fa-lock"></i><span class="hide-on-collapse">Admin Login</span>`;
-                btn.className = "w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-xl bg-slate-100 text-slate-500 font-bold text-sm hover:bg-slate-200 transition";
-            }
+            const lockBtn = document.getElementById('admin-lock-btn');
+            const lockBtnMobile = document.getElementById('admin-lock-btn-mobile');
+            const iconClass = auth.currentUser ? "fa-solid fa-lock-open text-emerald-500" : "fa-solid fa-lock text-slate-400";
+            if(lockBtn) lockBtn.innerHTML = `<i class="${iconClass} text-sm"></i>`;
+            if(lockBtnMobile) lockBtnMobile.innerHTML = `<button onclick="handleAdminLoginToggle()" class="p-2 hover:bg-blue-50 rounded-lg transition"><i class="${iconClass} text-sm"></i></button>`;
         }
 
-        function showToast(msg, iconClass = "fa-circle-info", iconColor = "text-blue-400") {
+        function showToast(msg) {
             const toast = document.getElementById('toast-notification');
             document.getElementById('toast-msg').innerText = msg;
-            document.getElementById('toast-icon').className = `fa-solid ${iconClass} ${iconColor}`;
             toast.classList.add('show');
             setTimeout(() => toast.classList.remove('show'), 3500);
         }
 
-        function autoResizeTextarea(el) {
-            el.style.height = 'auto';
-            el.style.height = el.scrollHeight + 'px';
+        function resizeAllTextareas() {
+            document.querySelectorAll('textarea[data-field]').forEach(el => {
+                el.style.height = 'auto';
+                el.style.height = el.scrollHeight + 'px';
+            });
         }
 
         function attachInputListeners() {
             document.querySelectorAll('textarea[data-field], input[data-field]').forEach(input => {
                 if(input.tagName === 'TEXTAREA') {
-                    autoResizeTextarea(input);
-                    input.addEventListener('input', function() { autoResizeTextarea(this); });
+                    input.addEventListener('input', function() { 
+                        this.style.height = 'auto';
+                        this.style.height = this.scrollHeight + 'px'; 
+                    });
                 }
-                
                 input.addEventListener('input', (e) => {
                     if (!auth.currentUser) return;
                     const field = e.target.dataset.field;
@@ -348,6 +408,7 @@
 
                     if (field.startsWith('profile.')) state.profile[field.split('.')[1]] = val;
                     else if (field.startsWith('about.')) state.about[field.split('.')[1]] = val;
+                    else if (field === 'section.title') state.sections.find(s => s.id === ids[0]).title = val;
                     else if (field === 'class.name') state.classes.find(c => c.id === ids[0]).name = val;
                     else if (field === 'subject.name') state.classes.find(c => c.id === ids[0]).subjects.find(s => s.id === ids[1]).name = val;
                     else if (field === 'subject.desc') state.classes.find(c => c.id === ids[0]).subjects.find(s => s.id === ids[1]).description = val;
@@ -363,88 +424,130 @@
             });
         }
 
+        // --- BREADCRUMB SITE MAP ---
+        function renderBreadcrumbs() {
+            const bc = document.getElementById('breadcrumb-container');
+            const firstName = state.profile.name.split(' ')[0] || 'Amaira';
+            let html = `<span class="cursor-pointer hover:text-blue-600 transition" onclick="switchView('about')"><i class="fa-solid fa-house text-[10px] mr-1"></i>${firstName}</span>`;
+            
+            if (state.currentView === 'subject') {
+                const sec = state.sections.find(s => s.id === state.activeIds.sectionId) || {title: 'Academics'};
+                const cls = state.classes.find(c => c.id === state.activeIds.classId);
+                const sub = cls.subjects.find(s => s.id === state.activeIds.subjectId);
+                html += `<span class="mx-2 text-slate-300">/</span><span class="cursor-pointer hover:text-blue-600 transition" onclick="handleIconClick(event, () => toggleMenuSection('sections', '${sec.id}'))">${sec.title}</span>`;
+                html += `<span class="mx-2 text-slate-300">/</span><span class="cursor-pointer hover:text-blue-600 transition" onclick="handleIconClick(event, () => toggleMenuSection('classes', '${cls.id}'))">${cls.name}</span>`;
+                html += `<span class="mx-2 text-slate-300">/</span><span class="text-slate-800 font-bold">${sub.name}</span>`;
+            } else if (state.currentView === 'category') {
+                const sec = state.sections.find(s => s.id === state.activeIds.sectionId) || {title: 'Beyond Academics'};
+                const catName = state.categoryNames[state.activeIds.category];
+                const cls = state.classes.find(c => c.id === state.activeIds.classId);
+                html += `<span class="mx-2 text-slate-300">/</span><span class="cursor-pointer hover:text-blue-600 transition" onclick="handleIconClick(event, () => toggleMenuSection('sections', '${sec.id}'))">${sec.title}</span>`;
+                html += `<span class="mx-2 text-slate-300">/</span><span class="cursor-pointer hover:text-blue-600 transition" onclick="handleIconClick(event, () => toggleMenuSection('categories', '${state.activeIds.category}'))">${catName}</span>`;
+                html += `<span class="mx-2 text-slate-300">/</span><span class="text-slate-800 font-bold">${cls.name}</span>`;
+            } else {
+                html += `<span class="mx-2 text-slate-300">/</span><span class="text-slate-800 font-bold">About Me</span>`;
+            }
+            bc.innerHTML = html;
+        }
+
         function renderSidebarNav() {
             const nav = document.getElementById('sidebar-nav');
             let html = `
-                <div onclick="handleIconClick(event, () => switchView('about'))" class="flex items-center space-x-3 p-3 rounded-xl cursor-pointer transition ${state.currentView === 'about' ? 'bg-blue-600 shadow-md text-white font-bold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'} center-on-collapse">
+                <div onclick="handleIconClick(event, () => switchView('about'))" class="flex items-center space-x-3 p-3 rounded-xl cursor-pointer transition ${state.currentView === 'about' ? 'bg-blue-600 shadow-md text-white font-bold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'} center-on-collapse mb-4">
                     <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${state.currentView === 'about' ? 'text-white' : 'bg-white shadow-sm text-slate-500'}"><i class="fa-solid fa-user text-sm"></i></div>
                     <span class="text-sm truncate hide-on-collapse">About Me</span>
                 </div>
             `;
 
-            html += `<div class="mt-6 mb-2 px-3 text-[10px] font-extrabold text-blue-400 uppercase tracking-widest hide-on-collapse">Academics</div>`;
-            state.classes.forEach((cls) => {
-                const isCollapsed = state.collapsedMenus['classes'][cls.id];
+            state.sections.forEach(sec => {
+                const isSecCollapsed = state.collapsedMenus['sections'][sec.id];
+                
                 html += `
-                    <div class="mt-1 min-w-0">
-                        <div class="flex items-center justify-between p-2 cursor-pointer group center-on-collapse hover:bg-white rounded-xl transition shadow-sm" onclick="handleIconClick(event, () => toggleMenuSection('classes', '${cls.id}'))">
-                            <div class="flex items-center space-x-3 w-full min-w-0 hide-on-collapse pl-1">
-                                <i class="fa-solid fa-graduation-cap text-xs text-blue-500"></i>
-                                <textarea rows="1" data-field="class.name" data-ids="${cls.id}" class="w-full text-sm font-bold text-slate-700 bg-transparent editable-border p-1 resize-none overflow-hidden" onclick="event.stopPropagation()">${cls.name}</textarea>
+                    <div class="mt-4 mb-1 group relative">
+                        <div class="flex items-center justify-between px-3 cursor-pointer hide-on-collapse" onclick="handleIconClick(event, () => toggleMenuSection('sections', '${sec.id}'))">
+                            <div class="flex items-center w-full min-w-0 pr-2">
+                                <textarea rows="1" data-field="section.title" data-ids="${sec.id}" class="w-full text-[10px] font-extrabold text-blue-500 uppercase tracking-widest bg-transparent editable-border resize-none overflow-hidden" onclick="event.stopPropagation()">${sec.title}</textarea>
                             </div>
-                            <i class="fa-solid fa-chevron-${isCollapsed ? 'down' : 'up'} text-[10px] text-slate-400 group-hover:text-blue-500 hide-on-collapse transition ml-2 mr-2"></i>
-                            <div class="hidden md:flex flex-col items-center justify-center w-full ${state.isSidebarCollapsed ? '!flex' : '!hidden'}">
-                                <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-white shadow-sm text-blue-500"><i class="fa-solid fa-graduation-cap text-sm"></i></div>
+                            <div class="flex items-center space-x-1">
+                                <i class="fa-solid fa-chevron-${isSecCollapsed ? 'down' : 'up'} text-[10px] text-slate-400 group-hover:text-blue-500 transition"></i>
+                                <button onclick="removeSection(event, '${sec.id}')" class="edit-controls-flex text-rose-400 hover:text-rose-600 p-1" title="Delete Section"><i class="fa-solid fa-times text-[10px]"></i></button>
                             </div>
                         </div>
-                        <div class="space-y-1 mt-1 ${isCollapsed ? 'hidden' : 'block'} min-w-0">
+                        <div class="hidden md:flex center-on-collapse justify-center w-full ${state.isSidebarCollapsed ? '!flex' : '!hidden'}">
+                            <div class="w-6 h-6 rounded bg-slate-100 flex items-center justify-center text-slate-400" title="${sec.title}"><i class="fa-solid fa-layer-group text-[10px]"></i></div>
+                        </div>
+                        
+                        <div class="tree-line mt-2 ${isSecCollapsed ? 'hidden' : 'block'} hide-on-collapse">
                 `;
 
-                cls.subjects.forEach(sub => {
-                    const isActive = state.activeIds.subjectId === sub.id;
-                    html += `
-                        <div onclick="switchView('subject', '${cls.id}', '${sub.id}')" class="flex items-center space-x-3 p-2.5 rounded-xl cursor-pointer transition ${isActive ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'} center-on-collapse ml-3 min-w-0">
-                            <i class="fa-solid fa-book-open text-[10px] ${isActive ? 'text-blue-600' : 'text-slate-300'} flex-shrink-0"></i>
-                            <span class="text-xs truncate hide-on-collapse min-w-0" data-sync="subject.name_${cls.id}_${sub.id}">${sub.name}</span>
-                        </div>
-                    `;
-                });
-
-                html += `
-                    <button onclick="addSubject('${cls.id}')" class="edit-controls-flex items-center space-x-2 text-xs font-bold text-blue-500 hover:text-blue-700 p-2 ml-3 mt-1 hide-on-collapse flex-shrink-0">
-                        <i class="fa-solid fa-plus"></i><span>Add Subject</span>
-                    </button>
-                </div></div>`;
-            });
-            
-            html += `<button onclick="addClass()" class="edit-controls-flex w-full items-center justify-center space-x-2 text-xs font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 py-2 mt-3 rounded-xl hide-on-collapse transition">
-                        <i class="fa-solid fa-plus"></i><span>Add Grade / Class</span>
-                     </button>`;
-
-            html += `<div class="mt-6 mb-2 px-3 text-[10px] font-extrabold text-blue-400 uppercase tracking-widest hide-on-collapse">Beyond Academics</div>`;
-            ['extracurriculars', 'hobbies', 'achievements', 'photoFeed'].forEach(cat => {
-                const icon = cat === 'photoFeed' ? 'fa-images' : (cat === 'achievements' ? 'fa-trophy' : (cat === 'hobbies' ? 'fa-palette' : 'fa-medal'));
-                const iconColor = cat === 'photoFeed' ? 'text-pink-500' : (cat === 'achievements' ? 'text-amber-500' : (cat === 'hobbies' ? 'text-purple-500' : 'text-emerald-500'));
-                const isCatCollapsed = state.collapsedMenus['categories'][cat];
-                const isActiveCat = state.currentView === 'category' && state.activeIds.category === cat;
-
-                html += `
-                    <div class="mt-1 min-w-0">
-                        <div class="flex items-center justify-between p-2 cursor-pointer group center-on-collapse hover:bg-white rounded-xl transition shadow-sm ${isActiveCat ? 'bg-white' : ''}" onclick="handleIconClick(event, () => toggleMenuSection('categories', '${cat}'))">
-                            <div class="flex items-center space-x-3 w-full min-w-0 hide-on-collapse pl-1">
-                                <i class="fa-solid ${icon} text-sm ${iconColor}"></i>
-                                <span class="text-sm font-bold text-slate-700 truncate min-w-0 w-full" data-sync="category.name_${cat}">${state.categoryNames[cat]}</span>
-                            </div>
-                            <i class="fa-solid fa-chevron-${isCatCollapsed ? 'down' : 'up'} text-[10px] text-slate-400 group-hover:${iconColor} hide-on-collapse transition ml-2 mr-2"></i>
-                            <div class="hidden md:flex flex-col items-center justify-center w-full ${state.isSidebarCollapsed ? '!flex' : '!hidden'}">
-                                <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-white shadow-sm ${iconColor}"><i class="fa-solid ${icon} text-sm"></i></div>
-                            </div>
-                        </div>
-                        <div class="space-y-1 mt-1 ${isCatCollapsed ? 'hidden' : 'block'} min-w-0">
-                `;
-                
-                state.classes.forEach(cls => {
-                    const isActive = state.currentView === 'category' && state.activeIds.category === cat && state.activeIds.classId === cls.id;
-                    html += `
-                        <div onclick="switchView('category', '${cls.id}', null, '${cat}')" class="flex items-center space-x-3 p-2.5 rounded-xl cursor-pointer transition ${isActive ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'} center-on-collapse ml-3 min-w-0">
-                            <i class="fa-regular fa-folder text-[10px] ${isActive ? 'text-blue-600' : 'text-slate-300'} flex-shrink-0"></i>
-                            <span class="text-xs truncate hide-on-collapse min-w-0">${cls.name}</span>
-                        </div>
-                    `;
-                });
-                
+                if (sec.isAcademic) {
+                    state.classes.forEach((cls) => {
+                        const isClsCollapsed = state.collapsedMenus['classes'][cls.id];
+                        html += `
+                            <div class="tree-item min-w-0 mb-1">
+                                <div class="flex items-center justify-between py-1.5 pl-6 pr-2 cursor-pointer group hover:bg-slate-50 rounded-lg transition" onclick="handleIconClick(event, () => toggleMenuSection('classes', '${cls.id}'))">
+                                    <div class="flex items-center space-x-2 w-full min-w-0">
+                                        <div class="w-1.5 h-1.5 rounded-full bg-blue-300 group-hover:bg-blue-500 transition"></div>
+                                        <textarea rows="1" data-field="class.name" data-ids="${cls.id}" class="w-full text-xs font-bold text-slate-700 bg-transparent editable-border p-0.5 resize-none overflow-hidden" onclick="event.stopPropagation()">${cls.name}</textarea>
+                                    </div>
+                                    <i class="fa-solid fa-chevron-${isClsCollapsed ? 'down' : 'up'} text-[8px] text-slate-400 group-hover:text-blue-500 transition ml-2"></i>
+                                </div>
+                                <div class="space-y-0.5 mt-0.5 ${isClsCollapsed ? 'hidden' : 'block'} pl-8 border-l-2 border-slate-100 ml-7">
+                        `;
+                        cls.subjects.forEach(sub => {
+                            const isActive = state.activeIds.subjectId === sub.id;
+                            html += `
+                                <div onclick="switchView('subject', '${sec.id}', '${cls.id}', '${sub.id}')" class="flex items-center space-x-2 py-1.5 px-2 rounded-lg cursor-pointer transition ${isActive ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-500 hover:text-slate-800'} min-w-0">
+                                    <i class="fa-solid fa-book-open text-[9px] ${isActive ? 'text-blue-600' : 'text-slate-300'} flex-shrink-0"></i>
+                                    <span class="text-xs truncate min-w-0" data-sync="subject.name_${cls.id}_${sub.id}">${sub.name}</span>
+                                </div>
+                            `;
+                        });
+                        html += `
+                            <button onclick="addSubject('${cls.id}')" class="edit-controls-flex items-center space-x-2 text-[10px] font-bold text-blue-500 hover:text-blue-700 py-1.5 px-2">
+                                <i class="fa-solid fa-plus"></i><span>Add Subject</span>
+                            </button>
+                        </div></div>`;
+                    });
+                    html += `<button onclick="addClass()" class="edit-controls-flex w-full items-center pl-6 py-2 space-x-2 text-[10px] font-bold text-emerald-500 hover:text-emerald-600 transition"><i class="fa-solid fa-plus"></i><span>Add Grade / Class</span></button>`;
+                } 
+                else {
+                    (sec.categories || []).forEach(cat => {
+                        const icon = cat === 'photoFeed' ? 'fa-images' : (cat === 'achievements' ? 'fa-trophy' : (cat === 'hobbies' ? 'fa-palette' : 'fa-medal'));
+                        const iconColor = cat === 'photoFeed' ? 'text-pink-500' : (cat === 'achievements' ? 'text-amber-500' : (cat === 'hobbies' ? 'text-purple-500' : 'text-emerald-500'));
+                        const isCatCollapsed = state.collapsedMenus['categories'][cat];
+                        
+                        html += `
+                            <div class="tree-item min-w-0 mb-1">
+                                <div class="flex items-center justify-between py-1.5 pl-6 pr-2 cursor-pointer group hover:bg-slate-50 rounded-lg transition" onclick="handleIconClick(event, () => toggleMenuSection('categories', '${cat}'))">
+                                    <div class="flex items-center space-x-2 w-full min-w-0">
+                                        <i class="fa-solid ${icon} text-[10px] ${iconColor} opacity-70 group-hover:opacity-100"></i>
+                                        <textarea rows="1" data-field="category.name" data-ids="${cat}" class="w-full text-xs font-bold text-slate-700 bg-transparent editable-border p-0.5 resize-none overflow-hidden" onclick="event.stopPropagation()">${state.categoryNames[cat]}</textarea>
+                                    </div>
+                                    <div class="flex items-center space-x-1">
+                                        <i class="fa-solid fa-chevron-${isCatCollapsed ? 'down' : 'up'} text-[8px] text-slate-400 group-hover:${iconColor} transition"></i>
+                                        <button onclick="removeCategory(event, '${sec.id}', '${cat}')" class="edit-controls-flex text-rose-400 hover:text-rose-600 p-1"><i class="fa-solid fa-times text-[10px]"></i></button>
+                                    </div>
+                                </div>
+                                <div class="space-y-0.5 mt-0.5 ${isCatCollapsed ? 'hidden' : 'block'} pl-8 border-l-2 border-slate-100 ml-7">
+                        `;
+                        state.classes.forEach(cls => {
+                            const isActive = state.currentView === 'category' && state.activeIds.category === cat && state.activeIds.classId === cls.id;
+                            html += `
+                                <div onclick="switchView('category', '${sec.id}', '${cls.id}', null, '${cat}')" class="flex items-center space-x-2 py-1.5 px-2 rounded-lg cursor-pointer transition ${isActive ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-500 hover:text-slate-800'} min-w-0">
+                                    <i class="fa-regular fa-folder text-[9px] ${isActive ? 'text-blue-600' : 'text-slate-300'} flex-shrink-0"></i>
+                                    <span class="text-xs truncate min-w-0">${cls.name}</span>
+                                </div>
+                            `;
+                        });
+                        html += `</div></div>`;
+                    });
+                    html += `<button onclick="addCategory('${sec.id}')" class="edit-controls-flex w-full items-center pl-6 py-2 space-x-2 text-[10px] font-bold text-emerald-500 hover:text-emerald-600 transition"><i class="fa-solid fa-plus"></i><span>Add Category</span></button>`;
+                }
                 html += `</div></div>`;
             });
+            
+            html += `<button onclick="addSection()" class="edit-controls-flex w-full items-center justify-center space-x-2 text-xs font-bold text-indigo-500 bg-indigo-50 hover:bg-indigo-100 py-3 mt-6 rounded-xl hide-on-collapse transition border border-indigo-100"><i class="fa-solid fa-plus"></i><span>New Main Section</span></button>`;
 
             nav.innerHTML = html;
         }
@@ -456,97 +559,137 @@
             document.querySelectorAll('textarea[data-field="profile.grade"]').forEach(el => el.value = state.profile.grade);
 
             renderSidebarNav();
+            renderBreadcrumbs();
             
             const vp = document.getElementById('main-content-viewport');
-            const titleEl = document.getElementById('current-page-title');
-            const iconEl = document.getElementById('header-icon');
 
             vp.classList.remove('fade-in');
             void vp.offsetWidth; 
             vp.classList.add('fade-in');
 
             if (state.currentView === 'about') {
-                titleEl.innerText = "About Me";
-                iconEl.className = "fa-solid fa-user text-sm";
                 vp.innerHTML = renderAboutMe();
             } else if (state.currentView === 'subject') {
                 const cls = state.classes.find(c => c.id === state.activeIds.classId);
                 const sub = cls.subjects.find(s => s.id === state.activeIds.subjectId);
-                titleEl.innerText = sub.name;
-                iconEl.className = "fa-solid fa-book-open text-sm";
                 vp.innerHTML = renderSubjectView(cls, sub);
             } else if (state.currentView === 'category') {
                 const cat = state.activeIds.category;
                 const cls = state.classes.find(c => c.id === state.activeIds.classId);
-                titleEl.innerText = `${state.categoryNames[cat]} - ${cls.name}`;
-                iconEl.className = cat === 'photoFeed' ? "fa-solid fa-images text-sm" : "fa-solid fa-star text-sm";
                 vp.innerHTML = renderCommonCategoryView(cat, cls.id);
             }
 
             attachInputListeners();
             updateEditModeUI();
+            
+            setTimeout(resizeAllTextareas, 50);
+            setTimeout(resizeAllTextareas, 200);
+            setTimeout(resizeAllTextareas, 500);
         }
 
         function renderAboutMe() {
             const mediaHtml = renderCarousel(state.about.media, "about.media", "about_media_input");
             
+            let quickLinksCardsHtml = '';
+            
+            state.sections.forEach(sec => {
+                if (sec.isAcademic) {
+                    // Academics Card with collapsible class dropdowns
+                    quickLinksCardsHtml += `
+                        <div class="glass-card rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col bg-white overflow-hidden">
+                            <div onclick="toggleShortcut(event, '${sec.id}')" class="cursor-pointer p-4 md:p-5 flex flex-col items-center justify-center text-center aspect-square group relative hover:bg-slate-50 transition-colors">
+                                <div class="w-14 h-14 md:w-16 md:h-16 rounded-[1.25rem] bg-slate-50 flex items-center justify-center mb-2 md:mb-3 group-hover:scale-110 transition-transform shadow-inner flex-shrink-0">
+                                    <i class="fa-solid fa-graduation-cap text-blue-500 text-2xl md:text-3xl"></i>
+                                </div>
+                                <div class="flex items-center justify-center space-x-1.5 w-full px-1">
+                                    <span class="font-extrabold text-slate-800 text-xs md:text-sm leading-snug break-words text-center">${sec.title}</span>
+                                    <i id="shortcut-icon-${sec.id}" class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-300 flex-shrink-0 mt-0.5"></i>
+                                </div>
+                            </div>
+                            <div id="shortcut-content-${sec.id}" class="max-h-0 opacity-0 overflow-hidden transition-all duration-300 ease-in-out bg-slate-50/50 border-t border-transparent">
+                                <div class="p-3 flex flex-col space-y-2 pb-3">
+                                    ${state.classes.map(cls => `
+                                        <div class="bg-white/80 rounded-xl p-2 border border-slate-100 shadow-sm mb-1">
+                                            <div onclick="toggleShortcutClass(event, '${sec.id}_${cls.id}')" class="flex items-center justify-between cursor-pointer text-xs font-bold text-slate-700 hover:text-blue-600 transition">
+                                                <span class="truncate pr-1">${cls.name}</span>
+                                                <i id="shortcut-class-icon-${sec.id}_${cls.id}" class="fa-solid fa-chevron-down text-[9px] text-slate-400 transition-transform duration-300 flex-shrink-0"></i>
+                                            </div>
+                                            <div id="shortcut-class-content-${sec.id}_${cls.id}" class="max-h-0 opacity-0 overflow-hidden transition-all duration-300 ease-in-out pl-2 mt-1 space-y-1">
+                                                ${cls.subjects.map(sub => `
+                                                    <button onclick="switchView('subject', '${sec.id}', '${cls.id}', '${sub.id}')" class="text-left w-full px-2 py-1.5 text-[11px] font-semibold text-slate-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition flex items-center">
+                                                        <i class="fa-solid fa-book-open mr-1.5 text-blue-300 flex-shrink-0 text-[9px]"></i>
+                                                        <span class="break-words leading-tight">${sub.name}</span>
+                                                    </button>
+                                                `).join('')}
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Beyond Academics individual subcategories cards
+                    (sec.categories || []).forEach(cat => {
+                        let icon = cat === 'photoFeed' ? 'fa-images' : (cat === 'achievements' ? 'fa-trophy' : (cat === 'hobbies' ? 'fa-palette' : 'fa-medal'));
+                        let color = cat === 'photoFeed' ? 'text-pink-500' : (cat === 'achievements' ? 'text-amber-500' : (cat === 'hobbies' ? 'text-purple-500' : 'text-emerald-500'));
+                        let catName = state.categoryNames[cat];
+
+                        quickLinksCardsHtml += `
+                            <div class="glass-card rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col bg-white overflow-hidden">
+                                <div onclick="toggleShortcut(event, '${cat}')" class="cursor-pointer p-4 md:p-5 flex flex-col items-center justify-center text-center aspect-square group relative hover:bg-slate-50 transition-colors">
+                                    <div class="w-14 h-14 md:w-16 md:h-16 rounded-[1.25rem] bg-slate-50 flex items-center justify-center mb-2 md:mb-3 group-hover:scale-110 transition-transform shadow-inner flex-shrink-0">
+                                        <i class="fa-solid ${icon} ${color} text-2xl md:text-3xl"></i>
+                                    </div>
+                                    <div class="flex items-center justify-center space-x-1.5 w-full px-1">
+                                        <span class="font-extrabold text-slate-800 text-xs md:text-sm leading-snug break-words text-center">${catName}</span>
+                                        <i id="shortcut-icon-${cat}" class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-300 flex-shrink-0 mt-0.5"></i>
+                                    </div>
+                                </div>
+                                <div id="shortcut-content-${cat}" class="max-h-0 opacity-0 overflow-hidden transition-all duration-300 ease-in-out bg-slate-50/50 border-t border-transparent">
+                                    <div class="p-3 flex flex-col space-y-1 pb-3">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-2 mb-1">Select Grade</span>
+                                        ${state.classes.map(cls => `
+                                            <button onclick="switchView('category', '${sec.id}', '${cls.id}', null, '${cat}')" class="text-left w-full px-3 py-2 text-xs font-semibold text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition flex items-center mb-0.5">
+                                                <i class="fa-regular fa-folder mr-2 text-indigo-300 flex-shrink-0 text-[10px]"></i>
+                                                <span class="break-words leading-tight">${cls.name}</span>
+                                            </button>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+            });
+
             return `
-                <div class="max-w-6xl mx-auto space-y-8 min-w-0 pb-10">
+                <div class="max-w-6xl mx-auto space-y-10 min-w-0 pb-10">
                     <div class="flex flex-col md:flex-row glass-card rounded-[2.5rem] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.06)] min-h-[450px]">
-                        <div class="w-full md:w-[45%] bg-slate-900 relative min-w-0 hide-if-no-media">
+                        <div class="w-full md:w-[45%] bg-slate-100 relative min-w-0 hide-if-no-media">
                             ${mediaHtml}
                             <input type="file" id="about_media_input" class="hidden" accept="image/*" multiple onchange="handleMediaUpload(event, 'about.media')">
-                            <div class="edit-controls-flex absolute bottom-4 left-4 z-30">
-                                <button onclick="addAboutVideo()" class="bg-rose-600 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-lg flex items-center space-x-1.5 hover:bg-rose-500 transition">
-                                    <i class="fa-brands fa-youtube"></i><span>Add Video</span>
-                                </button>
-                            </div>
                         </div>
                         
                         <div class="w-full md:flex-1 p-8 md:p-12 flex flex-col justify-center min-w-0 bg-white/60">
-                            <textarea rows="2" data-field="about.title" class="w-full text-4xl md:text-5xl font-extrabold text-slate-900 bg-transparent editable-border py-1 resize-none overflow-hidden leading-tight min-w-0 placeholder-slate-300" placeholder="Main Title">${state.about.title}</textarea>
-                            <textarea rows="2" data-field="about.subtitle" class="w-full text-xl md:text-2xl font-bold text-blue-600 bg-transparent editable-border py-1 mt-3 resize-none overflow-hidden min-w-0 placeholder-blue-200" placeholder="Subtitle">${state.about.subtitle}</textarea>
+                            <div class="flex items-center space-x-3 mb-2">
+                                <textarea rows="2" data-field="about.title" class="w-full text-4xl md:text-5xl font-extrabold text-slate-900 bg-transparent editable-border py-1 resize-none overflow-hidden leading-tight min-w-0 placeholder-slate-300" placeholder="Main Title">${state.about.title}</textarea>
+                                <span class="text-4xl md:text-5xl wave-emoji pb-2">👋</span>
+                            </div>
+                            <textarea rows="2" data-field="about.subtitle" class="w-full text-xl md:text-2xl font-bold text-blue-600 bg-transparent editable-border py-1 mt-1 resize-none overflow-hidden min-w-0 placeholder-blue-200" placeholder="Subtitle">${state.about.subtitle}</textarea>
                             <div class="w-16 h-1.5 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full my-8 shadow-sm"></div>
                             <textarea rows="6" data-field="about.bio" class="w-full text-base md:text-lg text-slate-600 leading-relaxed bg-transparent editable-border py-2 resize-none min-w-0 font-medium placeholder-slate-300" placeholder="Write your biography here...">${state.about.bio}</textarea>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6 items-start">
-                        ${[
-                            { id: 'academics', syncKey: '', icon: 'fa-graduation-cap', color: 'text-blue-500', title: 'Academics' },
-                            { id: 'extracurriculars', syncKey: 'category.name_extracurriculars', icon: 'fa-medal', color: 'text-emerald-500', title: state.categoryNames['extracurriculars'] },
-                            { id: 'hobbies', syncKey: 'category.name_hobbies', icon: 'fa-palette', color: 'text-purple-500', title: state.categoryNames['hobbies'] },
-                            { id: 'achievements', syncKey: 'category.name_achievements', icon: 'fa-trophy', color: 'text-amber-500', title: state.categoryNames['achievements'] },
-                            { id: 'photoFeed', syncKey: 'category.name_photoFeed', icon: 'fa-images', color: 'text-pink-500', title: state.categoryNames['photoFeed'] }
-                        ].map(s => `
-                            <div class="glass-card rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col bg-white overflow-hidden">
-                                <div onclick="toggleShortcut(event, '${s.id}')" class="cursor-pointer p-4 md:p-5 flex flex-col items-center justify-center text-center aspect-square group relative hover:bg-slate-50 transition-colors">
-                                    <div class="w-14 h-14 md:w-16 md:h-16 rounded-[1.25rem] bg-slate-50 flex items-center justify-center mb-2 md:mb-3 group-hover:scale-110 transition-transform shadow-inner flex-shrink-0">
-                                        <i class="fa-solid ${s.icon} ${s.color} text-2xl md:text-3xl"></i>
-                                    </div>
-                                    <div class="flex items-center justify-center space-x-1.5 w-full px-1">
-                                        <span class="font-extrabold text-slate-800 text-xs md:text-sm leading-snug break-words text-center" ${s.syncKey ? `data-sync="${s.syncKey}"` : ''}>${s.title}</span>
-                                        <i id="shortcut-icon-${s.id}" class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-300 flex-shrink-0 mt-0.5"></i>
-                                    </div>
-                                </div>
-                                <div id="shortcut-content-${s.id}" class="max-h-0 opacity-0 overflow-hidden transition-all duration-300 ease-in-out bg-slate-50/50 border-t border-transparent">
-                                    <div class="p-2 pt-2 flex flex-col space-y-1 pb-3">
-                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-2 mb-1">Select Grade</span>
-                                        ${state.classes.map(cls => {
-                                            const action = s.id === 'academics' 
-                                                ? (cls.subjects && cls.subjects.length > 0 ? "switchView('subject', '" + cls.id + "', '" + cls.subjects[0].id + "')" : "showToast('No subjects added yet.', 'fa-circle-exclamation', 'text-amber-400')")
-                                                : "switchView('category', '" + cls.id + "', null, '" + s.id + "')";
-                                            return `
-                                                <button onclick="${action}" class="text-left w-full px-3 py-2 text-xs font-semibold text-slate-600 hover:text-blue-700 hover:bg-blue-100 rounded-xl transition flex items-center">
-                                                    <i class="fa-regular fa-folder mr-2 text-slate-400 flex-shrink-0"></i>
-                                                    <span class="break-words leading-tight">${cls.name}</span>
-                                                </button>
-                                            `;
-                                        }).join('')}
-                                    </div>
-                                </div>
-                            </div>
-                        `).join('')}
+                    <div class="space-y-6">
+                        <div class="flex items-center space-x-4 px-2">
+                            <h3 class="text-xl font-extrabold text-slate-800">Explore My Portfolio</h3>
+                            <div class="flex-1 h-px bg-slate-200"></div>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6 items-start">
+                            ${quickLinksCardsHtml}
+                        </div>
                     </div>
                 </div>
             `;
@@ -555,41 +698,40 @@
         function renderSubjectView(cls, sub) {
             const projects = sub.projects || [];
             return `
-                <div class="max-w-6xl mx-auto space-y-6 md:space-y-8 min-w-0 pb-10">
-                    <div class="flex flex-col md:flex-row md:items-center justify-between glass-card p-6 md:p-8 rounded-[2.5rem] shadow-sm gap-4 min-w-0 bg-white">
-                        <div class="flex-1 min-w-0">
-                            <textarea rows="2" data-field="subject.name" data-ids="${cls.id},${sub.id}" class="w-full text-3xl md:text-4xl font-extrabold text-slate-900 bg-transparent editable-border py-1 resize-none overflow-hidden leading-tight min-w-0" placeholder="Subject Name">${sub.name}</textarea>
-                            <textarea rows="2" data-field="subject.desc" data-ids="${cls.id},${sub.id}" class="w-full text-base font-semibold text-slate-500 bg-transparent editable-border py-1 mt-2 resize-none overflow-hidden min-w-0" placeholder="Subject description...">${sub.description || ''}</textarea>
+                <div class="max-w-6xl mx-auto space-y-8 min-w-0 pb-10">
+                    <div class="glass-card rounded-[2rem] shadow-sm overflow-hidden bg-white">
+                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50/50 p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-blue-100/50">
+                            <div class="flex-1 min-w-0">
+                                <textarea rows="2" data-field="subject.name" data-ids="${cls.id},${sub.id}" class="w-full text-3xl md:text-4xl font-extrabold text-slate-900 bg-transparent editable-border py-1 resize-none overflow-hidden leading-tight min-w-0" placeholder="Subject Name">${sub.name}</textarea>
+                                <textarea rows="2" data-field="subject.desc" data-ids="${cls.id},${sub.id}" class="w-full text-sm md:text-base font-semibold text-slate-500 bg-transparent editable-border py-1 mt-1 resize-none overflow-hidden min-w-0" placeholder="Subject description...">${sub.description || ''}</textarea>
+                            </div>
+                            <button onclick="addProjectCard('${cls.id}', '${sub.id}')" class="edit-controls-flex bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-2xl text-sm font-bold shadow-lg hover:shadow-xl transition-all items-center space-x-2 flex-shrink-0">
+                                <i class="fa-solid fa-plus"></i><span>Add Project</span>
+                            </button>
                         </div>
-                        <button onclick="addProjectCard('${cls.id}', '${sub.id}')" class="edit-controls-flex bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-2xl text-sm font-bold shadow-lg hover:shadow-xl transition-all items-center space-x-2 flex-shrink-0">
-                            <i class="fa-solid fa-plus"></i><span>Add Project</span>
-                        </button>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                    <div class="flex flex-col space-y-10">
                         ${projects.map((proj, idx) => {
-                            const idKey = `${cls.id}_${sub.id}_${idx}`;
-                            const contextKey = `project|${cls.id}|${sub.id}|${idx}`; 
-                            const mediaHtml = renderCarousel(proj.media || [], contextKey, `proj_media_${idKey}`);
+                            const cKey = `${cls.id}_${sub.id}_${idx}`;
+                            const mediaHtml = renderCarousel(proj.media || [], `project.${cKey}`, `proj_media_${cKey}`);
+                            const reverseClass = idx % 2 !== 0 ? 'md:flex-row-reverse' : 'md:flex-row';
+                            
                             return `
-                                <div class="glass-card rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-md transition-shadow relative flex flex-col group min-w-0 bg-white">
-                                    <div class="relative hide-if-no-media bg-slate-900 w-full min-h-[260px]">
+                                <div class="glass-card rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-md transition-shadow relative flex flex-col ${reverseClass} group min-w-0 bg-white border border-slate-100">
+                                    <div class="relative hide-if-no-media bg-slate-50 w-full md:w-[45%] min-h-[300px] flex-shrink-0">
                                         ${mediaHtml}
-                                        <input type="file" id="proj_media_${idKey}" class="hidden" accept="image/*" multiple onchange="handleMediaUpload(event, 'project', '${cls.id}', '${sub.id}', ${idx})">
+                                        <input type="file" id="proj_media_${cKey}" class="hidden" accept="image/*" multiple onchange="handleMediaUpload(event, 'project', '${cls.id}', '${sub.id}', ${idx})">
                                     </div>
-                                    <div class="p-6 md:p-8 flex flex-col space-y-4 min-w-0 flex-1">
-                                        <div class="flex items-start justify-between gap-4 min-w-0">
-                                            <textarea rows="2" data-field="project.title" data-ids="${cls.id},${sub.id},${idx}" class="w-full font-extrabold text-slate-800 text-xl md:text-2xl bg-transparent editable-border py-1 resize-none overflow-hidden leading-tight min-w-0" placeholder="Project Title">${proj.title}</textarea>
+                                    <div class="p-8 md:p-10 flex flex-col justify-center min-w-0 w-full">
+                                        <div class="flex items-start justify-between gap-4 min-w-0 mb-4">
+                                            <textarea rows="2" data-field="project.title" data-ids="${cls.id},${sub.id},${idx}" class="w-full font-extrabold text-slate-800 text-2xl md:text-3xl bg-transparent editable-border py-1 resize-none overflow-hidden leading-tight min-w-0" placeholder="Project Title">${proj.title}</textarea>
                                             <div class="flex items-center space-x-2">
-                                                <button onclick="addProjectVideo('${cls.id}', '${sub.id}', ${idx})" class="edit-controls-flex text-rose-500 bg-rose-50 hover:bg-rose-100 p-3 rounded-xl transition items-center justify-center flex-shrink-0" title="Add YouTube Video">
-                                                    <i class="fa-brands fa-youtube"></i>
-                                                </button>
-                                                <button onclick="removeProjectCard('${cls.id}', '${sub.id}', ${idx})" class="edit-controls-flex text-rose-500 bg-rose-50 hover:bg-rose-100 p-3 rounded-xl transition items-center justify-center flex-shrink-0" title="Remove">
-                                                    <i class="fa-solid fa-trash"></i>
-                                                </button>
+                                                <button onclick="addProjectVideo('${cls.id}', '${sub.id}', ${idx})" class="edit-controls-flex text-rose-500 bg-rose-50 hover:bg-rose-100 p-3 rounded-xl transition items-center justify-center flex-shrink-0" title="Add YouTube Video"><i class="fa-brands fa-youtube"></i></button>
+                                                <button onclick="removeProjectCard('${cls.id}', '${sub.id}', ${idx})" class="edit-controls-flex text-rose-500 bg-rose-50 hover:bg-rose-100 p-3 rounded-xl transition items-center justify-center flex-shrink-0" title="Remove"><i class="fa-solid fa-trash"></i></button>
                                             </div>
                                         </div>
-                                        <textarea rows="5" data-field="project.desc" data-ids="${cls.id},${sub.id},${idx}" class="w-full text-base font-medium text-slate-600 bg-transparent editable-border py-1 resize-none hide-if-empty min-w-0" placeholder="Project description...">${proj.desc || ''}</textarea>
+                                        <textarea rows="5" data-field="project.desc" data-ids="${cls.id},${sub.id},${idx}" class="w-full text-base font-medium text-slate-600 leading-relaxed bg-transparent editable-border py-1 resize-none hide-if-empty min-w-0" placeholder="Project description...">${proj.desc || ''}</textarea>
                                     </div>
                                 </div>
                             `;
@@ -612,7 +754,7 @@
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between glass-card p-6 rounded-[2.5rem] shadow-sm gap-4 min-w-0 bg-white">
                             <textarea rows="1" data-field="category.name" data-ids="${category}" class="w-full text-3xl font-extrabold text-slate-900 bg-transparent editable-border py-1 resize-none overflow-hidden min-w-0" placeholder="Category Name">${catName}</textarea>
                             <div class="edit-controls-flex items-center space-x-3 flex-shrink-0">
-                                <button onclick="document.getElementById('feed_img_upload').click()" class="bg-blue-600 text-white px-5 py-3 rounded-xl text-sm font-bold shadow-md transition items-center space-x-2">
+                                <button onclick="document.getElementById('feed_img_upload').click()" class="bg-indigo-600 text-white px-5 py-3 rounded-xl text-sm font-bold shadow-md transition items-center space-x-2">
                                     <i class="fa-solid fa-camera"></i><span>Photo</span>
                                 </button>
                                 <button onclick="addFeedVideo('${category}', '${classId}')" class="bg-rose-500 text-white px-5 py-3 rounded-xl text-sm font-bold shadow-md transition items-center space-x-2">
@@ -633,13 +775,10 @@
                                         </div>
                                         <button onclick="removeGenericItem('${category}', '${classId}', ${idx})" class="edit-controls-flex ml-auto text-rose-500 text-sm p-3 bg-rose-50 hover:bg-rose-100 rounded-xl transition"><i class="fa-solid fa-trash"></i></button>
                                     </div>
-                                    <div class="bg-slate-900 relative flex justify-center w-full min-h-[350px]">
+                                    <div class="bg-slate-50 relative flex justify-center w-full">
                                         ${item.type === 'video' ? 
-                                            `<iframe class="w-full aspect-video my-auto" src="${item.url}" frameborder="0" allowfullscreen></iframe>` : 
-                                            `<div class="relative w-full h-[450px] flex items-center justify-center overflow-hidden bg-slate-900">
-                                                <div class="absolute inset-0 bg-cover bg-center blur-2xl opacity-40 scale-125" style="background-image: url('${item.url}')"></div>
-                                                <img src="${item.url}" class="relative max-w-full max-h-full object-contain z-10 p-3">
-                                            </div>`
+                                            `<iframe class="w-full aspect-video" src="${item.url}" frameborder="0" allowfullscreen></iframe>` : 
+                                            `<img src="${item.url}" class="w-full object-contain max-h-[700px]">`
                                         }
                                     </div>
                                     <div class="p-6">
@@ -661,40 +800,24 @@
             }
 
             return `
-                <div class="max-w-6xl mx-auto space-y-6 md:space-y-8 min-w-0 pb-10">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between glass-card p-6 rounded-[2.5rem] shadow-sm gap-4 min-w-0 bg-white">
-                        <textarea rows="1" data-field="category.name" data-ids="${category}" class="w-full text-3xl font-extrabold text-slate-900 bg-transparent editable-border py-1 resize-none overflow-hidden min-w-0">${catName}</textarea>
-                        <button onclick="addGenericItem('${category}', '${classId}')" class="edit-controls-flex bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-2xl text-sm font-bold flex-shrink-0 shadow-lg hover:shadow-xl transition-all"><i class="fa-solid fa-plus mr-2"></i>Add Item</button>
+                <div class="max-w-6xl mx-auto space-y-8 min-w-0 pb-10">
+                    <div class="glass-card rounded-[2rem] shadow-sm overflow-hidden bg-white">
+                        <div class="bg-gradient-to-r from-indigo-50 to-purple-50/50 p-6 md:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-indigo-100/50">
+                            <textarea rows="1" data-field="category.name" data-ids="${category}" class="w-full text-3xl font-extrabold text-slate-900 bg-transparent editable-border py-1 resize-none overflow-hidden min-w-0">${catName}</textarea>
+                            <button onclick="addGenericItem('${category}', '${classId}')" class="edit-controls-flex bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-2xl text-sm font-bold flex-shrink-0 shadow-lg hover:shadow-xl transition-all"><i class="fa-solid fa-plus mr-2"></i>Add Item</button>
+                        </div>
                     </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-                        ${items.map((item, idx) => {
-                            const idKey = `${category}_${classId}_${idx}`;
-                            const contextKey = `generic|${category}|${classId}|${idx}`;
-                            const mediaHtml = renderCarousel(item.media || [], contextKey, `generic_media_${idKey}`);
-                            return `
-                                <div class="glass-card rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-md transition-shadow relative flex flex-col group min-w-0 bg-white">
-                                    <div class="relative hide-if-no-media bg-slate-900 w-full min-h-[220px]">
-                                        ${mediaHtml}
-                                        <input type="file" id="generic_media_${idKey}" class="hidden" accept="image/*" multiple onchange="handleGenericMediaUpload(event, '${category}', '${classId}', ${idx})">
-                                    </div>
-                                    <div class="p-6 md:p-8 flex flex-col space-y-4 min-w-0 flex-1">
-                                        <div class="flex items-start justify-between gap-4 min-w-0">
-                                            <textarea rows="2" data-field="generic.title" data-ids="${category},${classId},${idx}" class="w-full font-extrabold text-slate-900 text-xl md:text-2xl bg-transparent editable-border py-1 resize-none overflow-hidden leading-tight min-w-0" placeholder="Title">${item.title}</textarea>
-                                            <div class="flex items-center space-x-2">
-                                                <button onclick="addGenericVideo('${category}', '${classId}', ${idx})" class="edit-controls-flex text-rose-500 bg-rose-50 hover:bg-rose-100 p-3 rounded-xl transition items-center justify-center flex-shrink-0" title="Add YouTube Video">
-                                                    <i class="fa-brands fa-youtube"></i>
-                                                </button>
-                                                <button onclick="removeGenericItem('${category}', '${classId}', ${idx})" class="edit-controls-flex text-rose-500 bg-rose-50 hover:bg-rose-100 p-3 rounded-xl transition items-center justify-center flex-shrink-0" title="Remove">
-                                                    <i class="fa-solid fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <textarea rows="4" data-field="generic.desc" data-ids="${category},${classId},${idx}" class="w-full text-base font-medium text-slate-600 bg-transparent editable-border py-1 resize-none hide-if-empty min-w-0" placeholder="Description...">${item.desc || ''}</textarea>
-                                    </div>
+                        ${items.map((item, idx) => `
+                            <div class="glass-card rounded-[2rem] p-8 shadow-sm hover:shadow-md transition-shadow min-w-0 bg-white border border-slate-100">
+                                <div class="flex items-start justify-between gap-4 min-w-0">
+                                    <textarea rows="2" data-field="generic.title" data-ids="${category},${classId},${idx}" class="w-full font-extrabold text-slate-900 text-xl md:text-2xl bg-transparent editable-border py-1 resize-none overflow-hidden leading-tight min-w-0" placeholder="Title">${item.title}</textarea>
+                                    <button onclick="removeGenericItem('${category}', '${classId}', ${idx})" class="edit-controls-flex text-rose-500 bg-rose-50 hover:bg-rose-100 p-3 rounded-xl flex-shrink-0 transition"><i class="fa-solid fa-trash"></i></button>
                                 </div>
-                            `;
-                        }).join('')}
+                                <textarea rows="4" data-field="generic.desc" data-ids="${category},${classId},${idx}" class="w-full text-base font-medium text-slate-600 bg-transparent editable-border py-1 mt-3 resize-none hide-if-empty min-w-0" placeholder="Description...">${item.desc || ''}</textarea>
+                            </div>
+                        `).join('')}
                     </div>
                 </div>
             `;
@@ -703,7 +826,7 @@
         function renderCarousel(mediaArr, context, inputId) {
             if (!mediaArr || mediaArr.length === 0) {
                 return `
-                    <div class="edit-controls-flex w-full h-full min-h-[250px] border-2 border-dashed border-blue-200 rounded-[2rem] items-center justify-center bg-blue-50/50 cursor-pointer hover:bg-blue-50 transition m-4 mx-auto max-w-[90%]" onclick="document.getElementById('${inputId}').click()">
+                    <div class="edit-controls-flex w-full h-full min-h-[250px] border-2 border-dashed border-blue-200 rounded-[2rem] md:rounded-l-[2.5rem] md:rounded-r-none items-center justify-center bg-blue-50/50 cursor-pointer hover:bg-blue-50 transition m-4 mx-auto max-w-[90%]" onclick="document.getElementById('${inputId}').click()">
                         <div class="text-center text-blue-400"><i class="fa-solid fa-cloud-arrow-up text-4xl mb-3"></i><p class="text-sm font-bold">Upload Photos or Add Video</p></div>
                     </div>`;
             }
@@ -730,15 +853,15 @@
                     ${mediaDisplayHtml}
                     <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                     
-                    <div class="edit-controls-flex absolute top-4 right-4 space-x-2 z-20">
+                    <div class="edit-controls-flex absolute top-4 right-4 space-x-2 z-10">
                         <button onclick="document.getElementById('${inputId}').click()" class="bg-white text-blue-600 w-10 h-10 rounded-xl shadow-lg flex items-center justify-center hover:scale-105 transition" title="Add Photo"><i class="fa-solid fa-camera text-sm"></i></button>
                         <button onclick="removeMedia('${context}')" class="bg-white text-rose-500 w-10 h-10 rounded-xl shadow-lg flex items-center justify-center hover:scale-105 transition" title="Remove"><i class="fa-solid fa-trash text-sm"></i></button>
                     </div>
                     
                     ${mediaArr.length > 1 ? `
-                        <button onclick="manualChangeSlide('${context}', -1)" class="absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 text-white w-10 h-10 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition backdrop-blur-md hover:bg-black/60 z-20"><i class="fa-solid fa-chevron-left text-sm"></i></button>
-                        <button onclick="manualChangeSlide('${context}', 1)" class="absolute right-4 top-1/2 -translate-y-1/2 bg-black/40 text-white w-10 h-10 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition backdrop-blur-md hover:bg-black/60 z-20"><i class="fa-solid fa-chevron-right text-sm"></i></button>
-                        <div class="carousel-dots absolute bottom-4 left-0 right-0 flex justify-center space-x-2 z-20">
+                        <button onclick="manualChangeSlide('${context}', -1)" class="absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 text-white w-10 h-10 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition backdrop-blur-md hover:bg-black/60 z-10"><i class="fa-solid fa-chevron-left text-sm"></i></button>
+                        <button onclick="manualChangeSlide('${context}', 1)" class="absolute right-4 top-1/2 -translate-y-1/2 bg-black/40 text-white w-10 h-10 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition backdrop-blur-md hover:bg-black/60 z-10"><i class="fa-solid fa-chevron-right text-sm"></i></button>
+                        <div class="carousel-dots absolute bottom-6 left-0 right-0 flex justify-center space-x-2 z-10">
                             ${mediaArr.map((_, i) => `<div class="carousel-dot w-2 h-2 rounded-full transition-all duration-300 ${i === currentIdx ? 'bg-white scale-125' : 'bg-white/40'}" data-index="${i}"></div>`).join('')}
                         </div>
                     ` : ''}
@@ -771,6 +894,9 @@
                                 setTimeout(() => {
                                     imgEl.src = typeof currentItem === 'string' ? currentItem : currentItem.url;
                                     imgEl.style.opacity = '1';
+                                    
+                                    const blurBg = container.querySelector('.bg-cover');
+                                    if(blurBg) blurBg.style.backgroundImage = `url('${imgEl.src}')`;
                                 }, 150);
                             } else {
                                 container.outerHTML = renderCarousel(images, container.getAttribute('data-context'), inputId);
@@ -799,14 +925,41 @@
             curr = (curr + dir + images.length) % images.length;
             state[`idx_${context}`] = curr;
             
-            // Re-render ONLY the carousel locally instead of refreshing the entire page
             el.outerHTML = renderCarousel(images, context, inputId);
         }
 
-        function toggleShortcut(e, cat) {
+        function removeMedia(context) {
+            const idx = state[`idx_${context}`] || 0;
+            if (context === 'about.media') {
+                state.about.media.splice(idx, 1);
+                state['idx_about.media'] = 0;
+            } else if (context.startsWith('project.')) {
+                const cleanContext = context.replace('project.', '');
+                const lastUnderscore = cleanContext.lastIndexOf('_');
+                const parentPath = cleanContext.substring(0, lastUnderscore); 
+                const pIdx = parseInt(cleanContext.substring(lastUnderscore + 1));
+                
+                const firstUnderscore = parentPath.indexOf('_');
+                const classId = parentPath.substring(0, firstUnderscore);
+                const subjectId = parentPath.substring(firstUnderscore + 1);
+                
+                const cls = state.classes.find(c => c.id === classId);
+                if (cls) {
+                    const sub = cls.subjects.find(s => s.id === subjectId);
+                    if (sub && sub.projects && sub.projects[pIdx]) {
+                        sub.projects[pIdx].media.splice(idx, 1);
+                        state[`idx_${context}`] = 0;
+                    }
+                }
+            }
+            triggerSave();
+            renderApp();
+        }
+
+        function toggleShortcut(e, key) {
             e.stopPropagation();
-            const content = document.getElementById('shortcut-content-' + cat);
-            const icon = document.getElementById('shortcut-icon-' + cat);
+            const content = document.getElementById('shortcut-content-' + key);
+            const icon = document.getElementById('shortcut-icon-' + key);
             if (content.style.maxHeight && content.style.maxHeight !== '0px') {
                 content.style.maxHeight = '0px';
                 icon.style.transform = 'rotate(0deg)';
@@ -822,38 +975,24 @@
             }
         }
 
-        function removeMedia(context) {
-            const idx = state[`idx_${context}`] || 0;
-            if (context === 'about.media') {
-                state.about.media.splice(idx, 1);
-                state['idx_about.media'] = 0;
-            } else if (context.startsWith('project|')) {
-                const parts = context.split('|');
-                const classId = parts[1];
-                const subjectId = parts[2];
-                const pIdx = parseInt(parts[3]);
-                
-                const cls = state.classes.find(c => c.id === classId);
-                if (cls) {
-                    const sub = cls.subjects.find(s => s.id === subjectId);
-                    if (sub && sub.projects && sub.projects[pIdx]) {
-                        sub.projects[pIdx].media.splice(idx, 1);
-                        state[`idx_${context}`] = 0;
-                    }
-                }
-            } else if (context.startsWith('generic|')) {
-                const parts = context.split('|');
-                const category = parts[1];
-                const classId = parts[2];
-                const itemIdx = parseInt(parts[3]);
-                
-                if (state[category] && state[category][classId] && state[category][classId][itemIdx]) {
-                    state[category][classId][itemIdx].media.splice(idx, 1);
-                    state[`idx_${context}`] = 0;
+        function toggleShortcutClass(e, key) {
+            e.stopPropagation();
+            const content = document.getElementById('shortcut-class-content-' + key);
+            const icon = document.getElementById('shortcut-class-icon-' + key);
+            if (content.style.maxHeight && content.style.maxHeight !== '0px') {
+                content.style.maxHeight = '0px';
+                icon.style.transform = 'rotate(0deg)';
+                content.style.opacity = '0';
+            } else {
+                content.style.maxHeight = content.scrollHeight + 'px';
+                icon.style.transform = 'rotate(180deg)';
+                content.style.opacity = '1';
+                // Expand parent accordion as well so the dropdown isn't clipped
+                const parentCard = content.closest('[id^="shortcut-content-"]');
+                if (parentCard) {
+                    parentCard.style.maxHeight = (parentCard.scrollHeight + content.scrollHeight) + 'px';
                 }
             }
-            triggerSave();
-            renderApp();
         }
 
         function uploadImageToWeb(file, callback) {
@@ -862,7 +1001,8 @@
                 return;
             }
 
-            showToast("Uploading image... Please wait ⏳", "fa-spinner fa-spin", "text-amber-400");
+            const syncBadge = document.querySelector('header .edit-controls-flex span');
+            if(syncBadge) syncBadge.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i><span class="hidden sm:inline">Uploading...</span>`;
             
             const reader = new FileReader();
             reader.readAsDataURL(file);
@@ -886,23 +1026,21 @@
                     .then(res => res.json())
                     .then(data => {
                         if(data.success) {
-                            showToast("Image Uploaded! ✅", "fa-circle-check", "text-emerald-400");
+                            showToast("Image Uploaded!");
                             callback(data.data.url);
-                        } else throw new Error("ImgBB API rejected the upload");
+                        } else throw new Error("ImgBB API rejected");
                     })
                     .catch(err => {
                         console.error("ImgBB Error:", err);
-                        alert("Upload Failed. Check your internet connection or API Key.");
-                        showToast("Upload Failed", "fa-triangle-exclamation", "text-rose-500");
+                        alert("Upload Failed. Check connection or API Key.");
+                        if(syncBadge) syncBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-500"></i><span class="hidden sm:inline text-rose-500">Failed</span>`;
                     });
                 };
             };
         }
 
         function handleProfilePicUpload(e) {
-            if(e.target.files[0]) {
-                uploadImageToWeb(e.target.files[0], res => { state.profile.pic = res; triggerSave(); renderApp(); });
-            }
+            if(e.target.files[0]) uploadImageToWeb(e.target.files[0], res => { state.profile.pic = res; triggerSave(); renderApp(); });
         }
 
         function handleMediaUpload(e, type, cId, sId, pIdx) {
@@ -922,43 +1060,16 @@
             });
         }
 
-        function handleGenericMediaUpload(e, category, classId, itemIdx) {
-            const files = Array.from(e.target.files);
-            if(files.length === 0) return;
-            files.forEach(file => {
-                uploadImageToWeb(file, res => {
-                    const item = state[category][classId][itemIdx];
-                    if(!item.media) item.media = [];
-                    item.media.push(res);
-                    triggerSave();
-                    renderApp();
-                });
-            });
-        }
-
         function handleFeedUpload(e, category, classId) {
-            const files = Array.from(e.target.files);
-            if(files.length === 0) return;
-            files.forEach(file => {
+            Array.from(e.target.files).forEach(file => {
                 uploadImageToWeb(file, res => {
                     if(!state[category]) state[category] = {};
                     if(!state[category][classId]) state[category][classId] = [];
-                    state[category][classId].unshift({ type: 'img', url: res, desc: '', media: [res] });
+                    state[category][classId].unshift({ type: 'img', url: res, desc: '' });
                     triggerSave();
                     renderApp();
                 });
             });
-        }
-
-        function addAboutVideo() {
-            const url = prompt("Paste YouTube URL or Shorts Link:");
-            if(!url) return;
-            let embedUrl = url;
-            if(url.includes('watch?v=')) embedUrl = url.replace('watch?v=', 'embed/');
-            else if(url.includes('youtu.be/')) embedUrl = url.replace('youtu.be/', 'youtube.com/embed/');
-            else if(url.includes('shorts/')) embedUrl = url.replace('shorts/', 'embed/');
-            state.about.media.push({ type: 'video', url: embedUrl });
-            triggerSave(); renderApp();
         }
 
         function addProjectVideo(cId, sId, pIdx) {
@@ -968,23 +1079,13 @@
             if(url.includes('watch?v=')) embedUrl = url.replace('watch?v=', 'embed/');
             else if(url.includes('youtu.be/')) embedUrl = url.replace('youtu.be/', 'youtube.com/embed/');
             else if(url.includes('shorts/')) embedUrl = url.replace('shorts/', 'embed/');
+
             const sub = state.classes.find(c => c.id === cId).subjects.find(s => s.id === sId);
             if(!sub.projects[pIdx].media) sub.projects[pIdx].media = [];
+            
             sub.projects[pIdx].media.push({ type: 'video', url: embedUrl });
-            triggerSave(); renderApp();
-        }
-
-        function addGenericVideo(category, classId, itemIdx) {
-            const url = prompt("Paste YouTube URL or Shorts Link:");
-            if(!url) return;
-            let embedUrl = url;
-            if(url.includes('watch?v=')) embedUrl = url.replace('watch?v=', 'embed/');
-            else if(url.includes('youtu.be/')) embedUrl = url.replace('youtu.be/', 'youtube.com/embed/');
-            else if(url.includes('shorts/')) embedUrl = url.replace('shorts/', 'embed/');
-            const item = state[category][classId][itemIdx];
-            if(!item.media) item.media = [];
-            item.media.push({ type: 'video', url: embedUrl });
-            triggerSave(); renderApp();
+            triggerSave();
+            renderApp();
         }
 
         function addFeedVideo(category, classId) {
@@ -994,10 +1095,52 @@
             if(url.includes('watch?v=')) embedUrl = url.replace('watch?v=', 'embed/');
             else if(url.includes('youtu.be/')) embedUrl = url.replace('youtu.be/', 'youtube.com/embed/');
             else if(url.includes('shorts/')) embedUrl = url.replace('shorts/', 'embed/');
+            
             if(!state[category]) state[category] = {};
             if(!state[category][classId]) state[category][classId] = [];
             state[category][classId].unshift({ type: 'video', url: embedUrl, desc: '' });
+            triggerSave();
+            renderApp();
+        }
+
+        function addSection() {
+            const name = prompt("Enter Name for New Main Section (e.g., 'Certificates', 'Travel'):");
+            if (!name) return;
+            const newId = 'sec_' + Date.now();
+            state.sections.push({ id: newId, title: name, isAcademic: false, categories: [] });
             triggerSave(); renderApp();
+            showToast("New Main Section Added!");
+        }
+
+        function removeSection(e, secId) {
+            e.stopPropagation();
+            if(confirm("Are you sure you want to completely remove this main section?")) {
+                state.sections = state.sections.filter(s => s.id !== secId);
+                triggerSave(); renderApp();
+            }
+        }
+
+        function addCategory(secId) {
+            const name = prompt("Enter New Category Name (e.g., 'Robotics Club'):");
+            if(!name) return;
+            const newCatId = 'cat_' + Date.now();
+            state.categoryNames[newCatId] = name;
+            state[newCatId] = {};
+            state.classes.forEach(cls => state[newCatId][cls.id] = []);
+            
+            const sec = state.sections.find(s => s.id === secId);
+            if(!sec.categories) sec.categories = [];
+            sec.categories.push(newCatId);
+            triggerSave(); renderApp();
+        }
+
+        function removeCategory(e, secId, catId) {
+            e.stopPropagation();
+            if(confirm("Are you sure you want to remove this category?")) {
+                const sec = state.sections.find(s => s.id === secId);
+                if(sec && sec.categories) sec.categories = sec.categories.filter(c => c !== catId);
+                triggerSave(); renderApp();
+            }
         }
 
         function addClass() {
@@ -1005,12 +1148,17 @@
             if (!name) return;
             const newId = 'class_' + Date.now();
             state.classes.unshift({ id: newId, name: name, year: '', subjects: [] });
-            ['extracurriculars', 'hobbies', 'achievements', 'photoFeed'].forEach(cat => {
-                if (!state[cat]) state[cat] = {};
-                state[cat][newId] = [];
+            
+            state.sections.forEach(s => {
+                if(!s.isAcademic && s.categories) {
+                    s.categories.forEach(cat => {
+                        if (!state[cat]) state[cat] = {};
+                        state[cat][newId] = [];
+                    });
+                }
             });
             triggerSave(); renderApp();
-            showToast("New Grade Added Successfully!", "fa-circle-check", "text-emerald-400");
+            showToast("New Grade Added Successfully!");
         }
 
         function addSubject(classId) {
@@ -1036,7 +1184,7 @@
         function addGenericItem(category, classId) {
             if(!state[category]) state[category] = {};
             if(!state[category][classId]) state[category][classId] = [];
-            state[category][classId].unshift({ title: 'New Item', desc: '', media: [] });
+            state[category][classId].unshift({ title: 'New Item', desc: '' });
             triggerSave(); renderApp();
         }
 
@@ -1046,12 +1194,6 @@
                 triggerSave(); renderApp();
             }
         }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            if (!state.currentView || state.currentView === 'subject' || state.currentView === 'category') {
-                state.currentView = 'about';
-            }
-        });
     </script>
 </body>
 </html>
