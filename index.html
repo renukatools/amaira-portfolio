@@ -53,6 +53,8 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--theme-border); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--theme-primary); }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
         .edit-controls-flex { display: none !important; }
         .edit-controls-block { display: none !important; }
@@ -69,6 +71,9 @@
         body:not(.edit-mode) .hide-if-no-media:not(:has(img)):not(:has(iframe)) { display: none !important; }
 
         body.edit-mode .edit-mode-hidden-item { opacity: 0.6; filter: grayscale(40%); border: 1px dashed #cbd5e1; }
+
+        /* Media Protection */
+        .protected-media { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-user-drag: none; pointer-events: auto; }
 
         #app-sidebar { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         #app-sidebar.collapsed { width: 5.5rem; }
@@ -102,7 +107,7 @@
 
 <body class="text-slate-800 flex h-screen overflow-hidden bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-100 via-slate-50 to-white selection:bg-blue-200">
 
-    <!-- Global Loader with 4-Second Timeout Safeguard -->
+    <!-- Global Loader -->
     <div id="global-loader" class="fixed inset-0 bg-slate-50 z-[99999] flex flex-col items-center justify-center transition-opacity duration-500">
         <div class="w-16 h-16 border-4 border-slate-200 rounded-full animate-spin shadow-sm" style="border-top-color: var(--theme-primary);"></div>
         <p class="mt-4 font-bold text-slate-600 tracking-wide text-sm animate-pulse">Loading Portfolio...</p>
@@ -110,6 +115,18 @@
 
     <!-- Mobile Overlay -->
     <div id="mobile-sidebar-overlay" class="mobile-overlay" onclick="toggleMobileMenu()"></div>
+
+    <!-- Fullscreen Media Modal -->
+    <div id="media-modal" class="fixed inset-0 z-[999999] hidden bg-slate-900/95 backdrop-blur-md flex items-center justify-center opacity-0 transition-opacity duration-300" onclick="closeModal()">
+        <button onclick="closeModal()" class="absolute top-6 right-6 text-white/70 hover:text-white text-4xl z-50 transition transform hover:scale-110"><i class="fa-solid fa-xmark"></i></button>
+        
+        <div class="relative w-full h-full max-w-6xl max-h-screen p-4 md:p-12 flex items-center justify-center" id="modal-content" onclick="event.stopPropagation()">
+            <!-- Rendered via JS -->
+        </div>
+        
+        <button onclick="event.stopPropagation(); modalChangeSlide(-1)" class="absolute left-2 md:left-10 top-1/2 -translate-y-1/2 text-white/50 hover:text-white text-3xl md:text-5xl z-50 p-4 transition transform hover:scale-110"><i class="fa-solid fa-chevron-left"></i></button>
+        <button onclick="event.stopPropagation(); modalChangeSlide(1)" class="absolute right-2 md:right-10 top-1/2 -translate-y-1/2 text-white/50 hover:text-white text-3xl md:text-5xl z-50 p-4 transition transform hover:scale-110"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
 
     <!-- Toast Notification -->
     <div id="toast-notification" class="fixed bottom-6 right-6 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center space-x-3 text-sm font-medium border border-slate-700">
@@ -127,7 +144,7 @@
             </button>
             
             <div class="relative cursor-pointer transition-transform hover:scale-105" onclick="handleThumbnailClick()">
-                <img id="sidebar-profile-pic" src="https://ui-avatars.com/api/?name=Amaira+Mulay&background=bfdbfe&color=1e3a8a" class="w-16 h-16 rounded-2xl object-cover shadow-lg border-2 border-white" alt="Amaira">
+                <img id="sidebar-profile-pic" src="https://ui-avatars.com/api/?name=User&background=bfdbfe&color=1e3a8a" class="w-16 h-16 rounded-2xl object-cover shadow-lg border-2 border-white protected-media" oncontextmenu="return false;" ondragstart="return false;" alt="Profile">
                 <div class="edit-controls-flex absolute inset-0 bg-black/40 rounded-2xl items-center justify-center opacity-0 group-hover:opacity-100 transition">
                     <i class="fa-solid fa-camera text-white text-sm"></i>
                 </div>
@@ -143,28 +160,23 @@
         <!-- Navigation Menu (Dynamic Tree) -->
         <nav class="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth" id="sidebar-nav"></nav>
 
-        <!-- Footer with Minimal Lock Icon & Theme Picker in Admin Mode -->
-        <div class="p-4 border-t border-slate-100/50 bg-slate-50/50 flex flex-col space-y-3 hide-on-collapse">
-            <div class="flex justify-end items-center">
-                <button onclick="handleAdminLoginToggle()" id="admin-lock-btn" class="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all" title="Admin Login">
+        <!-- Footer with Minimal Lock Icon & Theme Picker -->
+        <div class="p-4 border-t border-slate-100/50 bg-slate-50/50 flex flex-col space-y-3 mt-auto">
+            <div class="flex justify-between items-center hide-on-collapse">
+                <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest edit-controls-block">Color Theme</span>
+                <button onclick="handleAdminLoginToggle()" id="admin-lock-btn" class="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all ml-auto" title="Admin Login">
                     <i class="fa-solid fa-lock text-sm"></i>
                 </button>
             </div>
             
             <!-- Color Theme Selector (Admin Mode Only) -->
-            <div class="edit-controls-block pt-2 border-t border-slate-200/60">
-                <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block mb-1.5">Color Theme</span>
-                <div class="flex items-center justify-between">
-                    <button onclick="setTheme('blue')" title="Ocean Blue" class="w-6 h-6 rounded-full bg-blue-600 hover:scale-110 transition shadow-sm" id="theme-btn-blue"></button>
-                    <button onclick="setTheme('pink')" title="Rose Pink" class="w-6 h-6 rounded-full bg-pink-600 hover:scale-110 transition shadow-sm" id="theme-btn-pink"></button>
-                    <button onclick="setTheme('emerald')" title="Emerald Green" class="w-6 h-6 rounded-full bg-emerald-600 hover:scale-110 transition shadow-sm" id="theme-btn-emerald"></button>
-                    <button onclick="setTheme('violet')" title="Royal Violet" class="w-6 h-6 rounded-full bg-violet-600 hover:scale-110 transition shadow-sm" id="theme-btn-violet"></button>
-                    <button onclick="setTheme('amber')" title="Sunset Amber" class="w-6 h-6 rounded-full bg-amber-600 hover:scale-110 transition shadow-sm" id="theme-btn-amber"></button>
-                </div>
+            <div class="edit-controls-flex items-center justify-between hide-on-collapse pb-1">
+                <button onclick="setTheme('blue')" title="Ocean Blue" class="w-6 h-6 rounded-full bg-blue-600 hover:scale-110 transition shadow-sm" id="theme-btn-blue"></button>
+                <button onclick="setTheme('pink')" title="Rose Pink" class="w-6 h-6 rounded-full bg-pink-600 hover:scale-110 transition shadow-sm" id="theme-btn-pink"></button>
+                <button onclick="setTheme('emerald')" title="Emerald Green" class="w-6 h-6 rounded-full bg-emerald-600 hover:scale-110 transition shadow-sm" id="theme-btn-emerald"></button>
+                <button onclick="setTheme('violet')" title="Royal Violet" class="w-6 h-6 rounded-full bg-violet-600 hover:scale-110 transition shadow-sm" id="theme-btn-violet"></button>
+                <button onclick="setTheme('amber')" title="Sunset Amber" class="w-6 h-6 rounded-full bg-amber-600 hover:scale-110 transition shadow-sm" id="theme-btn-amber"></button>
             </div>
-        </div>
-        <div class="p-4 border-t border-slate-100/50 bg-slate-50/50 flex justify-center items-center center-on-collapse md:hidden" id="admin-lock-btn-mobile">
-            <button onclick="handleAdminLoginToggle()" class="p-2 text-slate-400 hover:text-blue-500 rounded-lg transition-all"><i class="fa-solid fa-lock text-sm"></i></button>
         </div>
     </aside>
 
@@ -179,7 +191,7 @@
                 </button>
                 
                 <!-- Website Map Breadcrumbs -->
-                <div class="flex items-center space-x-2 text-xs md:text-sm font-semibold text-slate-500 overflow-x-auto whitespace-nowrap scrollbar-hide" id="breadcrumb-container" style="-webkit-overflow-scrolling: touch;">
+                <div class="flex items-center space-x-2 text-xs md:text-sm font-semibold text-slate-500 overflow-x-auto whitespace-nowrap scrollbar-hide flex-1" id="breadcrumb-container" style="-webkit-overflow-scrolling: touch;">
                     <!-- Injected by JS -->
                 </div>
             </div>
@@ -213,6 +225,8 @@
             activeIds: { sectionId: null, classId: null, subjectId: null, category: null },
             collapsedMenus: { sections: {}, categories: {}, classes: {}, shortcutAcademicsClasses: {} },
             theme: 'blue',
+            modalContext: null,
+            modalIndex: 0,
             
             profile: { name: 'Amaira Mulay', grade: 'Class 6 • NVS', pic: '' },
             about: { 
@@ -239,17 +253,17 @@
                 title: 'Contact Me',
                 subtitle: "Let's connect and stay in touch!",
                 details: [
-                    { id: 'profession', label: 'Profession', value: 'Student', isVisible: true, icon: 'fa-user-graduate' },
-                    { id: 'institute', label: 'Institute', value: 'Nath Valley School', isVisible: true, icon: 'fa-school' },
-                    { id: 'address', label: 'Home Address', value: 'Chhatrapati Sambhajinagar, Maharashtra, India', isVisible: true, icon: 'fa-location-dot' },
-                    { id: 'email', label: 'Email', value: 'hello@example.com', isVisible: true, icon: 'fa-envelope' },
-                    { id: 'phone', label: 'Contact Number', value: '+91 XXXXX XXXXX', isVisible: true, icon: 'fa-phone' }
+                    { id: 'detail_1', label: 'Profession', value: 'Student', isVisible: true, icon: 'fa-user-graduate' },
+                    { id: 'detail_2', label: 'Institute', value: 'Nath Valley School', isVisible: true, icon: 'fa-school' },
+                    { id: 'detail_3', label: 'Home Address', value: 'Chhatrapati Sambhajinagar, Maharashtra, India', isVisible: true, icon: 'fa-location-dot' },
+                    { id: 'detail_4', label: 'Email', value: 'hello@example.com', isVisible: true, icon: 'fa-envelope' },
+                    { id: 'detail_5', label: 'Contact Number', value: '+91 XXXXX XXXXX', isVisible: true, icon: 'fa-phone' }
                 ],
                 socials: [
-                    { id: 'youtube', label: 'YouTube', link: '', isVisible: true, icon: 'fa-youtube', color: 'text-rose-500' },
-                    { id: 'linkedin', label: 'LinkedIn', link: '', isVisible: true, icon: 'fa-linkedin', color: 'text-blue-600' },
-                    { id: 'instagram', label: 'Instagram', link: '', isVisible: true, icon: 'fa-instagram', color: 'text-pink-600' },
-                    { id: 'facebook', label: 'Facebook', link: '', isVisible: true, icon: 'fa-facebook', color: 'text-blue-500' }
+                    { id: 'social_1', label: 'YouTube', link: '', isVisible: true, icon: 'fa-youtube', color: 'text-rose-500' },
+                    { id: 'social_2', label: 'LinkedIn', link: '', isVisible: true, icon: 'fa-linkedin', color: 'text-blue-600' },
+                    { id: 'social_3', label: 'Instagram', link: '', isVisible: true, icon: 'fa-instagram', color: 'text-pink-600' },
+                    { id: 'social_4', label: 'Facebook', link: '', isVisible: true, icon: 'fa-facebook', color: 'text-blue-500' }
                 ]
             }
         };
@@ -271,10 +285,7 @@
             loadFromFirebase();
         });
 
-        // 4-Second Timeout Safeguard for Fast Loader Dismissal
-        setTimeout(() => {
-            hideLoader();
-        }, 4000);
+        setTimeout(() => hideLoader(), 4000);
 
         function hideLoader() {
             const loader = document.getElementById('global-loader');
@@ -294,6 +305,8 @@
                     delete dbData.activeIds;
                     delete dbData.isEditMode;
                     delete dbData.isSidebarCollapsed;
+                    delete dbData.modalContext;
+                    delete dbData.modalIndex;
 
                     if (!dbData.sections) {
                         dbData.sections = [
@@ -301,10 +314,7 @@
                             { id: 'sec_beyond', title: 'Beyond Academics', isAcademic: false, categories: ['extracurriculars', 'hobbies', 'achievements', 'photoFeed'] }
                         ];
                     }
-                    // Initialize Contact if missing from older DB
-                    if (!dbData.contact) {
-                        dbData.contact = state.contact;
-                    }
+                    if (!dbData.contact) dbData.contact = state.contact;
                     
                     state = { ...state, ...dbData };
                 }
@@ -401,6 +411,17 @@
             actionFn();
         }
 
+        function openSidebarMenu(type, id) {
+            if (window.innerWidth < 768) {
+                const sidebar = document.getElementById('app-sidebar');
+                const overlay = document.getElementById('mobile-sidebar-overlay');
+                sidebar.classList.add('mobile-open');
+                overlay.classList.add('show');
+            }
+            state.collapsedMenus[type][id] = false; 
+            renderSidebarNav();
+        }
+
         function toggleMenuSection(type, id) {
             if (state.isSidebarCollapsed && window.innerWidth >= 768) toggleSidebarCollapse();
             state.collapsedMenus[type][id] = !state.collapsedMenus[type][id];
@@ -420,11 +441,9 @@
         function updateEditModeUI() {
             document.body.classList.toggle('edit-mode', state.isEditMode);
             const lockBtn = document.getElementById('admin-lock-btn');
-            const lockBtnMobile = document.getElementById('admin-lock-btn-mobile');
             const iconClass = auth.currentUser ? "fa-solid fa-lock-open" : "fa-solid fa-lock";
             const iconColor = auth.currentUser ? "text-emerald-500" : "text-slate-400";
             if(lockBtn) lockBtn.innerHTML = `<i class="${iconClass} ${iconColor} text-sm"></i>`;
-            if(lockBtnMobile) lockBtnMobile.innerHTML = `<button onclick="handleAdminLoginToggle()" class="p-2 hover:bg-blue-50 rounded-lg transition"><i class="${iconClass} ${iconColor} text-sm"></i></button>`;
 
             Object.keys(themes).forEach(t => {
                 const btn = document.getElementById(`theme-btn-${t}`);
@@ -502,14 +521,14 @@
                 const cls = state.classes.find(c => c.id === state.activeIds.classId);
                 const sub = cls.subjects.find(s => s.id === state.activeIds.subjectId);
                 html += `<span class="mx-2 text-slate-300 flex-shrink-0">/</span><span class="cursor-pointer hover:text-slate-900 transition flex-shrink-0" onclick="switchView('section', '${sec.id}')">${sec.title}</span>`;
-                html += `<span class="mx-2 text-slate-300 flex-shrink-0">/</span><span class="cursor-pointer hover:text-slate-900 transition flex-shrink-0" onclick="toggleMenuSection('classes', '${cls.id}')">${cls.name}</span>`;
+                html += `<span class="mx-2 text-slate-300 flex-shrink-0">/</span><span class="cursor-pointer hover:text-slate-900 transition flex-shrink-0" onclick="openSidebarMenu('classes', '${cls.id}')">${cls.name}</span>`;
                 html += `<span class="mx-2 text-slate-300 flex-shrink-0">/</span><span class="text-slate-900 font-bold flex-shrink-0">${sub.name}</span>`;
             } else if (state.currentView === 'category') {
                 const sec = state.sections.find(s => s.id === state.activeIds.sectionId) || {title: 'Beyond Academics'};
                 const catName = state.categoryNames[state.activeIds.category];
                 const cls = state.classes.find(c => c.id === state.activeIds.classId);
                 html += `<span class="mx-2 text-slate-300 flex-shrink-0">/</span><span class="cursor-pointer hover:text-slate-900 transition flex-shrink-0" onclick="switchView('section', '${sec.id}')">${sec.title}</span>`;
-                html += `<span class="mx-2 text-slate-300 flex-shrink-0">/</span><span class="cursor-pointer hover:text-slate-900 transition flex-shrink-0" onclick="toggleMenuSection('categories', '${state.activeIds.category}')">${catName}</span>`;
+                html += `<span class="mx-2 text-slate-300 flex-shrink-0">/</span><span class="cursor-pointer hover:text-slate-900 transition flex-shrink-0" onclick="openSidebarMenu('categories', '${state.activeIds.category}')">${catName}</span>`;
                 html += `<span class="mx-2 text-slate-300 flex-shrink-0">/</span><span class="text-slate-900 font-bold flex-shrink-0">${cls.name}</span>`;
             } else if (state.currentView === 'contact') {
                 html += `<span class="mx-2 text-slate-300 flex-shrink-0">/</span><span class="text-slate-900 font-bold flex-shrink-0">${state.contact.title}</span>`;
@@ -533,7 +552,6 @@
                 
                 html += `
                     <div class="mt-4 mb-1 group relative">
-                        <!-- Clicking title opens landing page, clicking chevron collapses menu -->
                         <div class="flex items-center justify-between px-3 hide-on-collapse cursor-pointer" onclick="handleIconClick(event, () => switchView('section', '${sec.id}'))">
                             <div class="flex items-center w-full min-w-0 pr-2">
                                 <textarea rows="1" data-field="section.title" data-ids="${sec.id}" class="w-full text-[10px] font-extrabold uppercase tracking-widest bg-transparent editable-border resize-none overflow-hidden cursor-pointer" style="color: var(--theme-primary);" onclick="event.stopPropagation()">${sec.title}</textarea>
@@ -676,19 +694,13 @@
                 contentHtml = renderContact();
             }
 
-            // Append Global Footer Quicklink if not on contact page
-            vp.innerHTML = contentHtml + (state.currentView !== 'contact' ? renderGlobalFooter() : '');
+            vp.innerHTML = contentHtml;
 
             attachInputListeners();
             updateEditModeUI();
             
             setTimeout(resizeAllTextareas, 50);
             setTimeout(resizeAllTextareas, 200);
-        }
-
-        function renderGlobalFooter() {
-            // Removed redundant global footer button from About Me & other pages as requested
-            return '';
         }
 
         function renderSectionLanding(sec) {
@@ -752,9 +764,18 @@
             `;
         }
 
+        // Automatic link formatter for emails and phone numbers
+        function getContactLink(value) {
+            if (!value) return '';
+            const cleaned = value.trim();
+            if (cleaned.includes('@') && !cleaned.includes(' ')) return `mailto:${cleaned}`;
+            if (/^[\+\d\s\-\(\)]+$/.test(cleaned) && cleaned.match(/\d/g)?.length >= 7) return `tel:${cleaned.replace(/[^\d\+]/g, '')}`;
+            return '';
+        }
+
         function renderContact() {
             return `
-                <div class="max-w-4xl mx-auto space-y-8 min-w-0 pb-10">
+                <div class="max-w-5xl mx-auto space-y-8 min-w-0 pb-10">
                     <!-- Header -->
                     <div class="glass-card p-8 md:p-10 rounded-[2.5rem] shadow-sm relative flex flex-col md:flex-row md:items-center justify-between gap-4" style="background: var(--theme-gradient); color: white;">
                         <div class="flex-1 min-w-0">
@@ -768,44 +789,71 @@
                     </div>
                     
                     <!-- Contact Details Grid -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        ${state.contact.details.map((detail, idx) => `
-                            <div class="glass-card rounded-[2rem] p-6 shadow-sm bg-white border border-slate-100 relative group ${!detail.isVisible ? 'edit-mode-hidden-item' : ''}" style="${!detail.isVisible && !state.isEditMode ? 'display:none;' : ''}">
-                                <button onclick="toggleContactItem('details', ${idx})" class="edit-controls-flex absolute top-4 right-4 text-slate-400 hover:text-slate-600 bg-slate-50 p-2 rounded-xl transition" title="Toggle Visibility">
-                                    <i class="fa-solid ${detail.isVisible ? 'fa-eye' : 'fa-eye-slash'}"></i>
-                                </button>
-                                
-                                <div class="flex items-start space-x-4">
-                                    <div class="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center flex-shrink-0" style="color: var(--theme-primary);">
-                                        <i class="fa-solid ${detail.icon} text-xl"></i>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between px-2">
+                            <h3 class="text-xl font-extrabold text-slate-800">Direct Contact</h3>
+                            <button onclick="addContactDetail()" class="edit-controls-flex text-[var(--theme-primary)] hover:bg-blue-50 px-3 py-1.5 rounded-lg text-xs font-bold transition items-center space-x-1"><i class="fa-solid fa-plus"></i><span>Add Detail</span></button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            ${state.contact.details.map((detail, idx) => {
+                                let linkHref = getContactLink(detail.value);
+                                return `
+                                <div class="glass-card rounded-[2rem] p-6 shadow-sm bg-white border border-slate-100 relative group ${!detail.isVisible ? 'edit-mode-hidden-item' : ''}" style="${!detail.isVisible && !state.isEditMode ? 'display:none;' : ''}">
+                                    <div class="edit-controls-flex absolute top-4 right-4 space-x-2">
+                                        <button onclick="toggleContactItem('details', ${idx})" class="text-slate-400 hover:text-slate-600 bg-slate-50 p-2 rounded-xl transition" title="Toggle Visibility">
+                                            <i class="fa-solid ${detail.isVisible ? 'fa-eye' : 'fa-eye-slash'}"></i>
+                                        </button>
+                                        <button onclick="removeContactItem('details', ${idx})" class="text-rose-400 hover:text-rose-600 bg-rose-50 p-2 rounded-xl transition" title="Delete Field">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
                                     </div>
-                                    <div class="flex-1 min-w-0 pr-6">
-                                        <textarea rows="1" data-field="contactDetail.label" data-ids="${idx}" class="w-full text-xs font-bold text-slate-400 uppercase tracking-wider bg-transparent editable-border p-0 resize-none overflow-hidden">${detail.label}</textarea>
-                                        <textarea rows="2" data-field="contactDetail.value" data-ids="${idx}" class="w-full text-base font-semibold text-slate-800 bg-transparent editable-border py-1 mt-1 resize-none overflow-hidden leading-snug">${detail.value}</textarea>
+                                    
+                                    <div class="flex items-start space-x-4">
+                                        <div class="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center flex-shrink-0" style="color: var(--theme-primary);">
+                                            <i class="fa-solid ${detail.icon || 'fa-circle-dot'} text-xl"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0 pr-16">
+                                            <textarea rows="1" data-field="contactDetail.label" data-ids="${idx}" class="w-full text-xs font-bold text-slate-400 uppercase tracking-wider bg-transparent editable-border p-0 resize-none overflow-hidden">${detail.label}</textarea>
+                                            
+                                            ${state.isEditMode ? 
+                                                `<textarea rows="2" data-field="contactDetail.value" data-ids="${idx}" class="w-full text-base font-semibold text-slate-800 bg-transparent editable-border py-1 mt-1 resize-none overflow-hidden leading-snug">${detail.value}</textarea>` : 
+                                                (linkHref ? `<a href="${linkHref}" class="block w-full text-base font-semibold text-[var(--theme-primary)] hover:underline py-1 mt-1 leading-snug break-words transition-colors">${detail.value}</a>` : `<div class="w-full text-base font-semibold text-slate-800 py-1 mt-1 leading-snug break-words">${detail.value}</div>`)
+                                            }
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        `).join('')}
+                            `}).join('')}
+                        </div>
                     </div>
 
                     <!-- Social Media Links -->
-                    <h3 class="text-xl font-extrabold text-slate-800 px-2 mt-10">Connect Online</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        ${state.contact.socials.map((social, idx) => `
-                            <div class="glass-card rounded-[1.5rem] p-5 shadow-sm bg-white border border-slate-100 relative group flex flex-col items-center text-center ${!social.isVisible ? 'edit-mode-hidden-item' : ''}" style="${!social.isVisible && !state.isEditMode ? 'display:none;' : ''}">
-                                <button onclick="toggleContactItem('socials', ${idx})" class="edit-controls-flex absolute top-3 right-3 text-slate-400 hover:text-slate-600 bg-slate-50 p-2 rounded-xl transition">
-                                    <i class="fa-solid ${social.isVisible ? 'fa-eye' : 'fa-eye-slash'}"></i>
-                                </button>
-                                <i class="fa-brands ${social.icon} text-3xl ${social.color} mb-3 mt-2"></i>
-                                <textarea rows="1" data-field="contactSocial.label" data-ids="${idx}" class="w-full text-sm font-extrabold text-slate-800 text-center bg-transparent editable-border p-0 resize-none overflow-hidden">${social.label}</textarea>
-                                
-                                ${state.isEditMode ? `
-                                    <input type="text" data-field="contactSocial.link" data-ids="${idx}" class="w-full text-[10px] text-slate-500 text-center bg-slate-50 editable-border py-1.5 px-2 rounded mt-2 border border-slate-200" placeholder="Paste URL here..." value="${social.link}">
-                                ` : `
-                                    ${social.link ? `<a href="${social.link}" target="_blank" class="mt-2 text-xs font-bold px-5 py-1.5 rounded-full shadow-sm hover:shadow-md hover:scale-105 transition inline-block text-white" style="background: var(--theme-gradient);">Visit <i class="fa-solid fa-arrow-up-right-from-square text-[9px] ml-1"></i></a>` : `<span class="mt-2 text-[10px] text-slate-400">No link added</span>`}
-                                `}
-                            </div>
-                        `).join('')}
+                    <div class="space-y-4 pt-6">
+                        <div class="flex items-center justify-between px-2">
+                            <h3 class="text-xl font-extrabold text-slate-800">Connect Online</h3>
+                            <button onclick="addContactSocial()" class="edit-controls-flex text-[var(--theme-primary)] hover:bg-blue-50 px-3 py-1.5 rounded-lg text-xs font-bold transition items-center space-x-1"><i class="fa-solid fa-plus"></i><span>Add Social Link</span></button>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            ${state.contact.socials.map((social, idx) => `
+                                <div class="glass-card rounded-[1.5rem] p-5 shadow-sm bg-white border border-slate-100 relative group flex flex-col items-center text-center ${!social.isVisible ? 'edit-mode-hidden-item' : ''}" style="${!social.isVisible && !state.isEditMode ? 'display:none;' : ''}">
+                                    <div class="edit-controls-flex absolute top-3 right-3 space-x-1">
+                                        <button onclick="toggleContactItem('socials', ${idx})" class="text-slate-400 hover:text-slate-600 bg-slate-50 p-2 rounded-xl transition">
+                                            <i class="fa-solid ${social.isVisible ? 'fa-eye' : 'fa-eye-slash'} text-[10px]"></i>
+                                        </button>
+                                        <button onclick="removeContactItem('socials', ${idx})" class="text-rose-400 hover:text-rose-600 bg-rose-50 p-2 rounded-xl transition">
+                                            <i class="fa-solid fa-trash text-[10px]"></i>
+                                        </button>
+                                    </div>
+                                    <i class="fa-brands ${social.icon || 'fa-globe'} text-3xl ${social.color || 'text-slate-700'} mb-3 mt-2"></i>
+                                    <textarea rows="1" data-field="contactSocial.label" data-ids="${idx}" class="w-full text-sm font-extrabold text-slate-800 text-center bg-transparent editable-border p-0 resize-none overflow-hidden">${social.label}</textarea>
+                                    
+                                    ${state.isEditMode ? `
+                                        <input type="text" data-field="contactSocial.link" data-ids="${idx}" class="w-full text-[10px] text-slate-500 text-center bg-slate-50 editable-border py-1.5 px-2 rounded mt-2 border border-slate-200" placeholder="Paste URL here..." value="${social.link}">
+                                    ` : `
+                                        ${social.link ? `<a href="${social.link}" target="_blank" class="mt-2 text-xs font-bold px-5 py-1.5 rounded-full shadow-sm hover:shadow-md hover:scale-105 transition inline-block text-white" style="background: var(--theme-gradient);">Visit <i class="fa-solid fa-arrow-up-right-from-square text-[9px] ml-1"></i></a>` : `<span class="mt-2 text-[10px] text-slate-400">No link added</span>`}
+                                    `}
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
                 </div>
             `;
@@ -813,14 +861,27 @@
 
         function toggleContactVisibility() {
             state.contact.isVisible = !state.contact.isVisible;
-            triggerSave();
-            renderApp();
+            triggerSave(); renderApp();
         }
 
         function toggleContactItem(type, idx) {
             state.contact[type][idx].isVisible = !state.contact[type][idx].isVisible;
-            triggerSave();
-            renderApp();
+            triggerSave(); renderApp();
+        }
+        
+        function removeContactItem(type, idx) {
+            state.contact[type].splice(idx, 1);
+            triggerSave(); renderApp();
+        }
+        
+        function addContactDetail() {
+            state.contact.details.push({ id: 'detail_' + Date.now(), label: 'New Field', value: 'Value', isVisible: true, icon: 'fa-circle-dot' });
+            triggerSave(); renderApp();
+        }
+
+        function addContactSocial() {
+            state.contact.socials.push({ id: 'social_' + Date.now(), label: 'New Link', link: '', isVisible: true, icon: 'fa-globe', color: 'text-slate-600' });
+            triggerSave(); renderApp();
         }
 
         function renderAboutMe() {
@@ -896,23 +957,6 @@
                     });
                 }
             });
-
-            // Contact Quicklink 
-            if (state.contact.isVisible || state.isEditMode) {
-                const hiddenClass = !state.contact.isVisible ? 'edit-mode-hidden-item' : '';
-                quickLinksCardsHtml += `
-                    <div class="glass-card rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col bg-white overflow-hidden ${hiddenClass}" style="${!state.contact.isVisible && !state.isEditMode ? 'display:none;' : ''}">
-                        <div onclick="switchView('contact')" class="cursor-pointer p-4 md:p-5 flex flex-col items-center justify-center text-center aspect-square group relative hover:bg-slate-50 transition-colors">
-                            <div class="w-14 h-14 md:w-16 md:h-16 rounded-[1.25rem] bg-slate-50 flex items-center justify-center mb-2 md:mb-3 group-hover:scale-110 transition-transform shadow-inner flex-shrink-0" style="color: var(--theme-primary);">
-                                <i class="fa-solid fa-address-card text-2xl md:text-3xl"></i>
-                            </div>
-                            <div class="flex items-center justify-center space-x-1.5 w-full px-1">
-                                <span class="font-extrabold text-slate-800 text-xs md:text-sm leading-snug break-words text-center">${state.contact.title}</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
 
             return `
                 <div class="max-w-6xl mx-auto space-y-10 min-w-0 pb-10">
@@ -1019,7 +1063,7 @@
                             ${items.map((item, idx) => `
                                 <div class="glass-card rounded-[2.5rem] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.06)] bg-white">
                                     <div class="p-5 flex items-center space-x-4 border-b border-slate-100">
-                                        <img src="${state.profile.pic || 'https://ui-avatars.com/api/?name=Amaira'}" class="w-10 h-10 rounded-full border border-slate-200 object-cover shadow-sm">
+                                        <img src="${state.profile.pic || 'https://ui-avatars.com/api/?name=Amaira'}" class="w-10 h-10 rounded-full border border-slate-200 object-cover shadow-sm protected-media" oncontextmenu="return false;" ondragstart="return false;">
                                         <div class="flex flex-col">
                                             <span class="font-extrabold text-sm text-slate-900">${state.profile.name}</span>
                                             <span class="font-semibold text-[10px] text-slate-400 uppercase tracking-wide">Nath Valley School</span>
@@ -1029,7 +1073,7 @@
                                     <div class="bg-slate-50 relative flex justify-center w-full">
                                         ${item.type === 'video' ? 
                                             `<iframe class="w-full aspect-video" src="${item.url}" frameborder="0" allowfullscreen></iframe>` : 
-                                            `<img src="${item.url}" class="w-full object-contain max-h-[700px]">`
+                                            `<img src="${item.url}" class="w-full object-contain max-h-[700px] protected-media" oncontextmenu="return false;" ondragstart="return false;">`
                                         }
                                     </div>
                                     <div class="p-6">
@@ -1059,16 +1103,30 @@
                         </div>
                     </div>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-                        ${items.map((item, idx) => `
-                            <div class="glass-card rounded-[2rem] p-8 shadow-sm hover:shadow-md transition-shadow min-w-0 bg-white border border-slate-100">
-                                <div class="flex items-start justify-between gap-4 min-w-0">
-                                    <textarea rows="2" data-field="generic.title" data-ids="${category},${classId},${idx}" class="w-full font-extrabold text-slate-900 text-xl md:text-2xl bg-transparent editable-border py-1 resize-none overflow-hidden leading-tight min-w-0" placeholder="Title">${item.title}</textarea>
-                                    <button onclick="removeGenericItem('${category}', '${classId}', ${idx})" class="edit-controls-flex text-rose-500 bg-rose-50 hover:bg-rose-100 p-3 rounded-xl flex-shrink-0 transition"><i class="fa-solid fa-trash"></i></button>
+                    <div class="flex flex-col space-y-10">
+                        ${items.map((item, idx) => {
+                            const cKey = `${category}|${classId}|${idx}`;
+                            const mediaHtml = renderCarousel(item.media || [], `generic.${cKey}`, `gen_media_${cKey.replace(/\|/g, '_')}`);
+                            const reverseClass = idx % 2 !== 0 ? 'md:flex-row-reverse' : 'md:flex-row';
+                            
+                            return `
+                            <div class="glass-card rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-md transition-shadow relative flex flex-col ${reverseClass} group min-w-0 bg-white border border-slate-100">
+                                <div class="relative hide-if-no-media bg-slate-50 w-full md:w-[45%] min-h-[300px] flex-shrink-0">
+                                    ${mediaHtml}
+                                    <input type="file" id="gen_media_${cKey.replace(/\|/g, '_')}" class="hidden" accept="image/*" multiple onchange="handleMediaUpload(event, 'generic', '${category}', '${classId}', ${idx})">
                                 </div>
-                                <textarea rows="4" data-field="generic.desc" data-ids="${category},${classId},${idx}" class="w-full text-base font-medium text-slate-600 bg-transparent editable-border py-1 mt-3 resize-none hide-if-empty min-w-0" placeholder="Description...">${item.desc || ''}</textarea>
+                                <div class="p-8 md:p-10 flex flex-col justify-center min-w-0 w-full">
+                                    <div class="flex items-start justify-between gap-4 min-w-0 mb-4">
+                                        <textarea rows="2" data-field="generic.title" data-ids="${category},${classId},${idx}" class="w-full font-extrabold text-slate-800 text-2xl md:text-3xl bg-transparent editable-border py-1 resize-none overflow-hidden leading-tight min-w-0" placeholder="Title">${item.title || 'New Item'}</textarea>
+                                        <div class="flex items-center space-x-2">
+                                            <button onclick="addGenericVideo('${category}', '${classId}', ${idx})" class="edit-controls-flex text-rose-500 bg-rose-50 hover:bg-rose-100 p-3 rounded-xl transition items-center justify-center flex-shrink-0" title="Add YouTube Video"><i class="fa-brands fa-youtube"></i></button>
+                                            <button onclick="removeGenericItem('${category}', '${classId}', ${idx})" class="edit-controls-flex text-rose-500 bg-rose-50 hover:bg-rose-100 p-3 rounded-xl flex-shrink-0 transition"><i class="fa-solid fa-trash"></i></button>
+                                        </div>
+                                    </div>
+                                    <textarea rows="5" data-field="generic.desc" data-ids="${category},${classId},${idx}" class="w-full text-base font-medium text-slate-600 leading-relaxed bg-transparent editable-border py-1 mt-3 resize-none hide-if-empty min-w-0" placeholder="Description...">${item.desc || ''}</textarea>
+                                </div>
                             </div>
-                        `).join('')}
+                        `}).join('')}
                     </div>
                 </div>
             `;
@@ -1081,7 +1139,7 @@
                         <div class="text-center" style="color: var(--theme-primary);"><i class="fa-solid fa-cloud-arrow-up text-4xl mb-3"></i><p class="text-sm font-bold">Upload Media</p></div>
                         <div class="flex space-x-2 mt-4 z-10">
                             <button onclick="event.stopPropagation(); document.getElementById('${inputId}').click()" class="px-4 py-2 text-white rounded-xl text-xs font-bold hover:scale-105 transition shadow-sm" style="background: var(--theme-gradient);">Photo</button>
-                            <button onclick="event.stopPropagation(); ${context === 'about.media' ? 'addAboutVideo()' : `addProjectVideoFromCarousel('${context}')`}" class="px-4 py-2 bg-rose-500 text-white rounded-xl text-xs font-bold hover:scale-105 transition shadow-sm"><i class="fa-brands fa-youtube mr-1"></i>Video</button>
+                            <button onclick="event.stopPropagation(); addProjectVideoFromCarousel('${context}')" class="px-4 py-2 bg-rose-500 text-white rounded-xl text-xs font-bold hover:scale-105 transition shadow-sm"><i class="fa-brands fa-youtube mr-1"></i>Video</button>
                         </div>
                     </div>`;
             }
@@ -1096,9 +1154,9 @@
             } else {
                 const imgSrc = typeof currentItem === 'string' ? currentItem : currentItem.url;
                 mediaDisplayHtml = `
-                    <div class="absolute inset-0 w-full h-full flex items-center justify-center overflow-hidden bg-slate-900">
+                    <div class="absolute inset-0 w-full h-full flex items-center justify-center overflow-hidden bg-slate-900 cursor-pointer" onclick="openModal('${context}', ${currentIdx})">
                         <div class="absolute inset-0 bg-cover bg-center blur-2xl opacity-40 scale-125" style="background-image: url('${imgSrc}')"></div>
-                        <img src="${imgSrc}" class="carousel-img relative max-w-full max-h-full object-contain z-10 p-3 transition-all duration-700 ease-in-out">
+                        <img src="${imgSrc}" class="carousel-img relative max-w-full max-h-full object-contain z-10 p-3 transition-all duration-700 ease-in-out protected-media" oncontextmenu="return false;" ondragstart="return false;">
                     </div>
                 `;
             }
@@ -1110,19 +1168,64 @@
                     
                     <div class="edit-controls-flex absolute top-4 right-4 space-x-2 z-10">
                         <button onclick="document.getElementById('${inputId}').click()" class="bg-white w-10 h-10 rounded-xl shadow-lg flex items-center justify-center hover:scale-105 transition" style="color: var(--theme-primary);" title="Add Photo"><i class="fa-solid fa-camera text-sm"></i></button>
-                        <button onclick="${context === 'about.media' ? 'addAboutVideo()' : `addProjectVideoFromCarousel('${context}')`}" class="bg-white w-10 h-10 rounded-xl shadow-lg flex items-center justify-center hover:scale-105 transition text-rose-500" title="Add Video"><i class="fa-brands fa-youtube text-sm"></i></button>
+                        <button onclick="addProjectVideoFromCarousel('${context}')" class="bg-white w-10 h-10 rounded-xl shadow-lg flex items-center justify-center hover:scale-105 transition text-rose-500" title="Add Video"><i class="fa-brands fa-youtube text-sm"></i></button>
                         <button onclick="removeMedia('${context}')" class="bg-white text-rose-500 w-10 h-10 rounded-xl shadow-lg flex items-center justify-center hover:scale-105 transition" title="Remove"><i class="fa-solid fa-trash text-sm"></i></button>
                     </div>
                     
                     ${mediaArr.length > 1 ? `
-                        <button onclick="manualChangeSlide('${context}', -1)" class="absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 text-white w-10 h-10 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition backdrop-blur-md hover:bg-black/60 z-10"><i class="fa-solid fa-chevron-left text-sm"></i></button>
-                        <button onclick="manualChangeSlide('${context}', 1)" class="absolute right-4 top-1/2 -translate-y-1/2 bg-black/40 text-white w-10 h-10 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition backdrop-blur-md hover:bg-black/60 z-10"><i class="fa-solid fa-chevron-right text-sm"></i></button>
-                        <div class="carousel-dots absolute bottom-6 left-0 right-0 flex justify-center space-x-2 z-10">
+                        <button onclick="event.stopPropagation(); manualChangeSlide('${context}', -1)" class="absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 text-white w-10 h-10 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition backdrop-blur-md hover:bg-black/60 z-10"><i class="fa-solid fa-chevron-left text-sm"></i></button>
+                        <button onclick="event.stopPropagation(); manualChangeSlide('${context}', 1)" class="absolute right-4 top-1/2 -translate-y-1/2 bg-black/40 text-white w-10 h-10 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition backdrop-blur-md hover:bg-black/60 z-10"><i class="fa-solid fa-chevron-right text-sm"></i></button>
+                        <div class="carousel-dots absolute bottom-6 left-0 right-0 flex justify-center space-x-2 z-10 pointer-events-none">
                             ${mediaArr.map((_, i) => `<div class="carousel-dot w-2 h-2 rounded-full transition-all duration-300 ${i === currentIdx ? 'bg-white scale-125' : 'bg-white/40'}" data-index="${i}"></div>`).join('')}
                         </div>
                     ` : ''}
                 </div>
             `;
+        }
+
+        function openModal(context, index) {
+            if (state.isEditMode) return;
+            state.modalContext = context;
+            state.modalIndex = index;
+            renderModal();
+            const modal = document.getElementById('media-modal');
+            modal.classList.remove('hidden');
+            void modal.offsetWidth; 
+            modal.classList.remove('opacity-0');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('media-modal');
+            modal.classList.add('opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.getElementById('modal-content').innerHTML = '';
+            }, 300);
+        }
+
+        function renderModal() {
+            const container = document.querySelector(`[data-context="${state.modalContext}"]`);
+            if(!container) return;
+            
+            const images = JSON.parse(container.getAttribute('data-images').replace(/&quot;/g, '"'));
+            const currentItem = images[state.modalIndex];
+            const content = document.getElementById('modal-content');
+            
+            if (typeof currentItem === 'object' && currentItem.type === 'video') {
+                content.innerHTML = `<iframe class="w-full h-full aspect-video rounded-2xl shadow-2xl" src="${currentItem.url}" frameborder="0" allowfullscreen></iframe>`;
+            } else {
+                const imgSrc = typeof currentItem === 'string' ? currentItem : currentItem.url;
+                content.innerHTML = `<img src="${imgSrc}" class="max-w-full max-h-full object-contain rounded-xl shadow-2xl protected-media transition-opacity duration-300" oncontextmenu="return false;" ondragstart="return false;">`;
+            }
+        }
+
+        function modalChangeSlide(dir) {
+            const container = document.querySelector(`[data-context="${state.modalContext}"]`);
+            if(!container) return;
+            const images = JSON.parse(container.getAttribute('data-images').replace(/&quot;/g, '"'));
+            
+            state.modalIndex = (state.modalIndex + dir + images.length) % images.length;
+            renderModal();
         }
 
         setInterval(() => {
@@ -1140,9 +1243,10 @@
                         container.setAttribute('data-index', idx);
                         const currentItem = images[idx];
                         const inputId = container.getAttribute('data-input') || 'temp_input';
+                        const context = container.getAttribute('data-context');
                         
                         if (typeof currentItem === 'object' && currentItem.type === 'video') {
-                            container.outerHTML = renderCarousel(images, container.getAttribute('data-context'), inputId);
+                            container.outerHTML = renderCarousel(images, context, inputId);
                         } else {
                             const imgEl = container.querySelector('.carousel-img');
                             if(imgEl) {
@@ -1153,9 +1257,12 @@
                                     
                                     const blurBg = container.querySelector('.bg-cover');
                                     if(blurBg) blurBg.style.backgroundImage = `url('${imgEl.src}')`;
+                                    
+                                    // Update parent click handler to new index
+                                    imgEl.parentElement.setAttribute('onclick', `openModal('${context}', ${idx})`);
                                 }, 150);
                             } else {
-                                container.outerHTML = renderCarousel(images, container.getAttribute('data-context'), inputId);
+                                container.outerHTML = renderCarousel(images, context, inputId);
                             }
                         }
                         
@@ -1164,7 +1271,6 @@
                             dot.className = `carousel-dot w-2 h-2 rounded-full transition-all duration-300 ${i === idx ? 'bg-white scale-125' : 'bg-white/40'}`;
                         });
                         
-                        const context = container.getAttribute('data-context');
                         state[`idx_${context}`] = idx;
                     }
                 } catch(e) {}
@@ -1202,6 +1308,16 @@
                         sub.projects[pIdx].media.splice(idx, 1);
                         state[`idx_${context}`] = 0;
                     }
+                }
+            } else if (context.startsWith('generic.')) {
+                const parts = context.replace('generic.', '').split('|');
+                const catId = parts[0];
+                const classId = parts[1];
+                const pIdx = parseInt(parts[2]);
+                
+                if (state[catId] && state[catId][classId] && state[catId][classId][pIdx]) {
+                    state[catId][classId][pIdx].media.splice(idx, 1);
+                    state[`idx_${context}`] = 0;
                 }
             }
             triggerSave();
@@ -1293,16 +1409,21 @@
             if(e.target.files[0]) uploadImageToWeb(e.target.files[0], res => { state.profile.pic = res; triggerSave(); renderApp(); });
         }
 
-        function handleMediaUpload(e, type, cId, sId, pIdx) {
+        function handleMediaUpload(e, type, arg1, arg2, arg3) {
             const files = Array.from(e.target.files);
             if(files.length === 0) return;
             files.forEach(file => {
                 uploadImageToWeb(file, res => {
-                    if (type === 'about.media') state.about.media.push(res);
-                    else if (type === 'project') {
-                        const p = state.classes.find(c => c.id === cId).subjects.find(s => s.id === sId).projects[pIdx];
+                    if (type === 'about.media') {
+                        state.about.media.push(res);
+                    } else if (type === 'project') {
+                        const p = state.classes.find(c => c.id === arg1).subjects.find(s => s.id === arg2).projects[arg3];
                         if(!p.media) p.media = [];
                         p.media.push(res);
+                    } else if (type === 'generic') {
+                        const items = state[arg1][arg2];
+                        if(!items[arg3].media) items[arg3].media = [];
+                        items[arg3].media.push(res);
                     }
                     triggerSave();
                     renderApp();
@@ -1352,13 +1473,31 @@
             renderApp();
         }
 
+        function addGenericVideo(catId, clsId, pIdx) {
+            const url = prompt("Paste YouTube URL or Shorts Link:");
+            if(!url) return;
+            let embedUrl = url;
+            if(url.includes('watch?v=')) embedUrl = url.replace('watch?v=', 'embed/');
+            else if(url.includes('youtu.be/')) embedUrl = url.replace('youtu.be/', 'youtube.com/embed/');
+            else if(url.includes('shorts/')) embedUrl = url.replace('shorts/', 'embed/');
+
+            const items = state[catId][clsId];
+            if(!items[pIdx].media) items[pIdx].media = [];
+            
+            items[pIdx].media.push({ type: 'video', url: embedUrl });
+            triggerSave();
+            renderApp();
+        }
+
         function addProjectVideoFromCarousel(context) {
-            if (context.startsWith('project.')) {
+            if (context === 'about.media') {
+                addAboutVideo();
+            } else if (context.startsWith('project.')) {
                 const parts = context.replace('project.', '').split('|');
-                const classId = parts[0];
-                const subjectId = parts[1];
-                const pIdx = parseInt(parts[2]);
-                addProjectVideo(classId, subjectId, pIdx);
+                addProjectVideo(parts[0], parts[1], parseInt(parts[2]));
+            } else if (context.startsWith('generic.')) {
+                const parts = context.replace('generic.', '').split('|');
+                addGenericVideo(parts[0], parts[1], parseInt(parts[2]));
             }
         }
 
@@ -1472,14 +1611,8 @@
         function addGenericItem(category, classId) {
             if(!state[category]) state[category] = {};
             if(!state[category][classId]) state[category][classId] = [];
-            state[category][classId].unshift({ title: 'New Item', desc: '' });
+            state[category][classId].unshift({ title: 'New Item', desc: '', media: [] });
             triggerSave(); renderApp();
-        }
-
-        function removeGenericItem(category, classId, idx) {
-            state[category][classId].splice(idx, 1);
-            triggerSave(); renderApp();
-            showToast("Item removed");
         }
     </script>
 </body>
