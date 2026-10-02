@@ -14,7 +14,7 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Firebase SDKs (Removed Storage SDK, keeping core database and auth) -->
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -35,7 +35,7 @@
         const db = firebase.firestore();
         const auth = firebase.auth();
 
-        // 2. PASTE YOUR IMGBB API KEY HERE (To bypass Google's paywall)
+        // 2. PASTE YOUR IMGBB API KEY HERE (To bypass Google's storage limits)
         const IMGBB_API_KEY = "a6c8e02c15899509447d65b571eefb92";
     </script>
 
@@ -48,7 +48,7 @@
         ::-webkit-scrollbar-thumb { background: #93c5fd; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #3b82f6; }
 
-        /* Edit Mode Logic - Strict Hiding */
+        /* Edit Mode Logic */
         .edit-controls-flex { display: none !important; }
         .edit-controls-block { display: none !important; }
         body.edit-mode .edit-controls-flex { display: flex !important; }
@@ -65,13 +65,12 @@
         body:not(.edit-mode) .hide-if-empty:empty,
         body:not(.edit-mode) .hide-if-no-media:not(:has(img)):not(:has(iframe)) { display: none !important; }
 
-        /* Sidebar Desktop Transitions */
+        /* Sidebar & Transitions */
         #app-sidebar { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         #app-sidebar.collapsed { width: 5.5rem; }
         #app-sidebar.collapsed .hide-on-collapse { display: none; opacity: 0; }
         #app-sidebar.collapsed .center-on-collapse { justify-content: center; padding-left: 0; padding-right: 0; }
         
-        /* Mobile Sidebar Drawer Logic */
         @media (max-width: 767px) {
             #app-sidebar { position: absolute; left: 0; top: 0; transform: translateX(-100%); width: 85vw !important; max-width: 320px; z-index: 50; height: 100%; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
             #app-sidebar.mobile-open { transform: translateX(0); }
@@ -81,20 +80,23 @@
             .mobile-overlay.show { display: block; }
         }
 
-        /* Toast Notifications */
         #toast-notification { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s; transform: translateY(100px); opacity: 0; z-index: 99999; }
         #toast-notification.show { transform: translateY(0); opacity: 1; }
 
-        /* Animations */
         .fade-in { animation: fadeIn 0.4s ease forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Premium Glass Effect */
         .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.5); }
     </style>
 </head>
 
 <body class="text-slate-800 flex h-screen overflow-hidden bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-100 via-slate-50 to-white selection:bg-blue-200">
+
+    <!-- GLOBAL LOADING SCREEN (Fixes the default ghost image flash!) -->
+    <div id="global-loader" class="fixed inset-0 bg-slate-50 z-[99999] flex flex-col items-center justify-center transition-opacity duration-500">
+        <div class="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin shadow-sm"></div>
+        <p class="mt-4 font-bold text-slate-600 tracking-wide text-sm animate-pulse">Loading Portfolio...</p>
+    </div>
 
     <!-- Mobile Overlay -->
     <div id="mobile-sidebar-overlay" class="mobile-overlay" onclick="toggleMobileMenu()"></div>
@@ -107,8 +109,6 @@
 
     <!-- Sidebar -->
     <aside id="app-sidebar" class="glass-card border-r border-slate-200/50 flex flex-col w-[19rem] flex-shrink-0 relative shadow-[4px_0_24px_rgba(37,99,235,0.05)] z-40">
-        
-        <!-- Profile Section -->
         <div class="p-6 flex flex-col items-center border-b border-slate-100/50 relative group">
             <button onclick="toggleSidebarCollapse()" class="hidden md:flex absolute -right-3.5 top-10 bg-white border border-blue-100 text-blue-500 hover:text-blue-700 hover:bg-blue-50 w-7 h-7 rounded-full items-center justify-center shadow-md z-10 transition-all">
                 <i class="fa-solid fa-chevron-left text-[10px]" id="collapse-icon"></i>
@@ -128,12 +128,8 @@
             </div>
         </div>
 
-        <!-- Navigation Menu -->
-        <nav class="flex-1 overflow-y-auto p-4 space-y-1 scroll-smooth" id="sidebar-nav">
-            <!-- Rendered by JS -->
-        </nav>
+        <nav class="flex-1 overflow-y-auto p-4 space-y-1 scroll-smooth" id="sidebar-nav"></nav>
 
-        <!-- Admin Control Footer -->
         <div class="p-4 border-t border-slate-100/50 bg-white/50 flex flex-col space-y-2">
             <button onclick="handleAdminLoginToggle()" id="edit-mode-btn" class="w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-xl bg-slate-100/80 text-slate-500 font-bold text-sm transition-all hover:bg-slate-200 shadow-sm">
                 <i class="fa-solid fa-lock"></i>
@@ -144,8 +140,6 @@
 
     <!-- Main Content -->
     <main class="flex-1 flex flex-col h-full overflow-hidden relative min-w-0">
-        
-        <!-- Top Header -->
         <header class="h-16 glass-card border-b border-slate-200/50 px-4 md:px-8 flex items-center justify-between flex-shrink-0 z-10 relative">
             <div class="flex items-center space-x-3 min-w-0">
                 <button onclick="toggleMobileMenu()" class="md:hidden flex items-center justify-center w-10 h-10 text-slate-600 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition flex-shrink-0">
@@ -165,7 +159,6 @@
             </div>
         </header>
 
-        <!-- Dynamic Viewport -->
         <div id="main-content-viewport" class="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 lg:p-10 fade-in scroll-smooth">
             <!-- Content Injected via JS -->
         </div>
@@ -183,20 +176,13 @@
             about: { 
                 title: 'Hello! I am Amaira.', 
                 subtitle: 'Welcome to my digital portfolio!', 
-                bio: 'I am an enthusiastic 6th-grade student at Nath Valley School in Chhatrapati Sambhajinagar. I love exploring the wonders of Science, participating in school activities, and learning new skills every day! I hope you like my digital portfolio, which will give you a brief about my academics as well as my extra-curricular activities and hobbies.',
-                media: [] 
+                bio: 'I am an enthusiastic student exploring the wonders of Science, participating in school activities, and learning new skills every day!',
+                media: [] // Default dummy images removed for a clean start
             },
             classes: [
                 {
                     id: 'class_6', name: 'Class 6 (2026-27)', year: '2026-2027',
-                    subjects: [
-                        {
-                            id: 'sub_science', name: 'Science & MDP', description: 'Exploring the world of Science and hands-on multi-disciplinary projects.',
-                            projects: [
-                                { title: 'Monginis Factory Visit', desc: 'Educational field trip to understand industrial baking, temperature control, and food hygiene standards. We observed the massive ovens and automated mixing machines!', media: [] }
-                            ]
-                        }
-                    ]
+                    subjects: [{ id: 'sub_science', name: 'Science & MDP', description: '', projects: [] }]
                 }
             ],
             categoryNames: {
@@ -217,7 +203,7 @@
             if (user) {
                 state.isEditMode = true;
             } else {
-                state.isEditMode = false;
+                state.isEditMode = false; // Locks out edit mode instantly
             }
             loadFromFirebase(); 
             updateEditModeUI();
@@ -239,10 +225,16 @@
                     });
                     state = { ...state, ...dbData };
                 }
-                renderApp();
             } catch (e) {
                 console.error("Error loading data:", e);
+            } finally {
                 renderApp(); 
+                // Hide the loader smoothly once the real cloud data has rendered
+                const loader = document.getElementById('global-loader');
+                if(loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => { if(loader) loader.style.display = 'none'; }, 400);
+                }
             }
         }
 
@@ -261,7 +253,7 @@
                 } 
                 catch (e) { 
                     console.error("Cloud Save Error:", e);
-                    alert("⚠️ CLOUD SAVE FAILED: " + e.message + "\n\nIf you see a size limit error, delete 1 or 2 old photos first so the database un-jams!");
+                    alert("⚠️ CLOUD SAVE FAILED: " + e.message);
                     if(syncContainer) syncContainer.innerHTML = `<span class="text-xs font-bold text-rose-600 bg-rose-50 px-3 py-1.5 rounded-full border border-rose-200 flex items-center space-x-1.5 whitespace-nowrap shadow-sm"><i class="fa-solid fa-triangle-exclamation"></i><span class="hidden sm:inline">Failed</span></span>`;
                 }
             }, 500);
@@ -391,7 +383,6 @@
                 </div>
             `;
 
-            // Academics
             html += `<div class="mt-6 mb-2 px-3 text-[10px] font-extrabold text-blue-400 uppercase tracking-widest hide-on-collapse">Academics</div>`;
             state.classes.forEach((cls) => {
                 const isCollapsed = state.collapsedMenus['classes'][cls.id];
@@ -431,7 +422,6 @@
                         <i class="fa-solid fa-plus"></i><span>Add Grade / Class</span>
                      </button>`;
 
-            // Beyond Academics
             html += `<div class="mt-6 mb-2 px-3 text-[10px] font-extrabold text-blue-400 uppercase tracking-widest hide-on-collapse">Beyond Academics</div>`;
             ['extracurriculars', 'hobbies', 'achievements', 'photoFeed'].forEach(cat => {
                 const icon = cat === 'photoFeed' ? 'fa-images' : (cat === 'achievements' ? 'fa-trophy' : (cat === 'hobbies' ? 'fa-palette' : 'fa-medal'));
@@ -589,13 +579,14 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                         ${projects.map((proj, idx) => {
-                            const cKey = `${cls.id}_${sub.id}_${idx}`;
-                            const mediaHtml = renderCarousel(proj.media || [], `project.${cKey}`, `proj_media_${cKey}`);
+                            const idKey = `${cls.id}_${sub.id}_${idx}`;
+                            const contextKey = `project|${cls.id}|${sub.id}|${idx}`; // Using pipe '|' to fix deletion bug!
+                            const mediaHtml = renderCarousel(proj.media || [], contextKey, `proj_media_${idKey}`);
                             return `
                                 <div class="glass-card rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-md transition-shadow relative flex flex-col group min-w-0 bg-white">
                                     <div class="relative hide-if-no-media bg-slate-900 w-full min-h-[260px]">
                                         ${mediaHtml}
-                                        <input type="file" id="proj_media_${cKey}" class="hidden" accept="image/*" multiple onchange="handleMediaUpload(event, 'project', '${cls.id}', '${sub.id}', ${idx})">
+                                        <input type="file" id="proj_media_${idKey}" class="hidden" accept="image/*" multiple onchange="handleMediaUpload(event, 'project', '${cls.id}', '${sub.id}', ${idx})">
                                     </div>
                                     <div class="p-6 md:p-8 flex flex-col space-y-4 min-w-0 flex-1">
                                         <div class="flex items-start justify-between gap-4 min-w-0">
@@ -689,13 +680,14 @@
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                         ${items.map((item, idx) => {
-                            const cKey = `${category}_${classId}_${idx}`;
-                            const mediaHtml = renderCarousel(item.media || [], `generic.${cKey}`, `generic_media_${cKey}`);
+                            const idKey = `${category}_${classId}_${idx}`;
+                            const contextKey = `generic|${category}|${classId}|${idx}`;
+                            const mediaHtml = renderCarousel(item.media || [], contextKey, `generic_media_${idKey}`);
                             return `
                                 <div class="glass-card rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-md transition-shadow relative flex flex-col group min-w-0 bg-white">
                                     <div class="relative hide-if-no-media bg-slate-900 w-full min-h-[220px]">
                                         ${mediaHtml}
-                                        <input type="file" id="generic_media_${cKey}" class="hidden" accept="image/*" multiple onchange="handleGenericMediaUpload(event, '${category}', '${classId}', ${idx})">
+                                        <input type="file" id="generic_media_${idKey}" class="hidden" accept="image/*" multiple onchange="handleGenericMediaUpload(event, '${category}', '${classId}', ${idx})">
                                     </div>
                                     <div class="p-6 md:p-8 flex flex-col space-y-4 min-w-0 flex-1">
                                         <div class="flex items-start justify-between gap-4 min-w-0">
@@ -765,6 +757,25 @@
             `;
         }
 
+        function toggleShortcut(e, cat) {
+            e.stopPropagation();
+            const content = document.getElementById('shortcut-content-' + cat);
+            const icon = document.getElementById('shortcut-icon-' + cat);
+            if (content.style.maxHeight && content.style.maxHeight !== '0px') {
+                content.style.maxHeight = '0px';
+                icon.style.transform = 'rotate(0deg)';
+                content.style.opacity = '0';
+                content.classList.remove('border-slate-100');
+                content.classList.add('border-transparent');
+            } else {
+                content.style.maxHeight = content.scrollHeight + 'px';
+                icon.style.transform = 'rotate(180deg)';
+                content.style.opacity = '1';
+                content.classList.remove('border-transparent');
+                content.classList.add('border-slate-100');
+            }
+        }
+
         setInterval(() => {
             if(state.isEditMode) return;
             document.querySelectorAll('.carousel-container').forEach(container => {
@@ -821,15 +832,12 @@
             if (context === 'about.media') {
                 state.about.media.splice(idx, 1);
                 state['idx_about.media'] = 0;
-            } else if (context.startsWith('project.')) {
-                const cleanContext = context.replace('project.', '');
-                const lastUnderscore = cleanContext.lastIndexOf('_');
-                const parentPath = cleanContext.substring(0, lastUnderscore);
-                const pIdx = parseInt(cleanContext.substring(lastUnderscore + 1));
-                
-                const firstUnderscore = parentPath.indexOf('_');
-                const classId = parentPath.substring(0, firstUnderscore);
-                const subjectId = parentPath.substring(firstUnderscore + 1);
+            } else if (context.startsWith('project|')) {
+                // FIXED PARSING: Split using straight pipe '|' so extra underscores don't break the code
+                const parts = context.split('|');
+                const classId = parts[1];
+                const subjectId = parts[2];
+                const pIdx = parseInt(parts[3]);
                 
                 const cls = state.classes.find(c => c.id === classId);
                 if (cls) {
@@ -839,15 +847,11 @@
                         state[`idx_${context}`] = 0;
                     }
                 }
-            } else if (context.startsWith('generic.')) {
-                const cleanContext = context.replace('generic.', '');
-                const lastUnderscore = cleanContext.lastIndexOf('_');
-                const parentPath = cleanContext.substring(0, lastUnderscore);
-                const itemIdx = parseInt(cleanContext.substring(lastUnderscore + 1));
-                
-                const firstUnderscore = parentPath.indexOf('_');
-                const category = parentPath.substring(0, firstUnderscore);
-                const classId = parentPath.substring(firstUnderscore + 1);
+            } else if (context.startsWith('generic|')) {
+                const parts = context.split('|');
+                const category = parts[1];
+                const classId = parts[2];
+                const itemIdx = parseInt(parts[3]);
                 
                 if (state[category] && state[category][classId] && state[category][classId][itemIdx]) {
                     state[category][classId][itemIdx].media.splice(idx, 1);
@@ -858,9 +862,6 @@
             renderApp();
         }
 
-        // ==========================================
-        // NEW IMGBB FREE CLOUD UPLOAD SYSTEM
-        // ==========================================
         function uploadImageToWeb(file, callback) {
             if (!IMGBB_API_KEY || IMGBB_API_KEY === "PASTE_YOUR_IMGBB_KEY_HERE") {
                 alert("Please paste your ImgBB API Key in the code first!");
@@ -875,7 +876,6 @@
                 const img = new Image();
                 img.src = e.target.result;
                 img.onload = () => {
-                    // Compress image slightly to save user bandwidth
                     const canvas = document.createElement('canvas');
                     const MAX_WIDTH = 1200;
                     let width = img.width, height = img.height;
@@ -884,24 +884,17 @@
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
                     
-                    // Convert to base64 string, remove the metadata prefix for ImgBB
                     const base64Image = canvas.toDataURL('image/jpeg', 0.85).split(',')[1];
-                    
                     const formData = new FormData();
                     formData.append('image', base64Image);
                     
-                    fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-                        method: 'POST',
-                        body: formData
-                    })
+                    fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData })
                     .then(res => res.json())
                     .then(data => {
                         if(data.success) {
-                            showToast("Image Uploaded & Saved! ✅", "fa-circle-check", "text-emerald-400");
-                            callback(data.data.url); // Returns the tiny URL
-                        } else {
-                            throw new Error("ImgBB API rejected the upload");
-                        }
+                            showToast("Image Uploaded! ✅", "fa-circle-check", "text-emerald-400");
+                            callback(data.data.url);
+                        } else throw new Error("ImgBB API rejected the upload");
                     })
                     .catch(err => {
                         console.error("ImgBB Error:", err);
@@ -914,11 +907,7 @@
 
         function handleProfilePicUpload(e) {
             if(e.target.files[0]) {
-                uploadImageToWeb(e.target.files[0], res => { 
-                    state.profile.pic = res; 
-                    triggerSave(); 
-                    renderApp(); 
-                });
+                uploadImageToWeb(e.target.files[0], res => { state.profile.pic = res; triggerSave(); renderApp(); });
             }
         }
 
@@ -974,10 +963,8 @@
             if(url.includes('watch?v=')) embedUrl = url.replace('watch?v=', 'embed/');
             else if(url.includes('youtu.be/')) embedUrl = url.replace('youtu.be/', 'youtube.com/embed/');
             else if(url.includes('shorts/')) embedUrl = url.replace('shorts/', 'embed/');
-
             state.about.media.push({ type: 'video', url: embedUrl });
-            triggerSave();
-            renderApp();
+            triggerSave(); renderApp();
         }
 
         function addProjectVideo(cId, sId, pIdx) {
@@ -987,13 +974,10 @@
             if(url.includes('watch?v=')) embedUrl = url.replace('watch?v=', 'embed/');
             else if(url.includes('youtu.be/')) embedUrl = url.replace('youtu.be/', 'youtube.com/embed/');
             else if(url.includes('shorts/')) embedUrl = url.replace('shorts/', 'embed/');
-
             const sub = state.classes.find(c => c.id === cId).subjects.find(s => s.id === sId);
             if(!sub.projects[pIdx].media) sub.projects[pIdx].media = [];
-            
             sub.projects[pIdx].media.push({ type: 'video', url: embedUrl });
-            triggerSave();
-            renderApp();
+            triggerSave(); renderApp();
         }
 
         function addGenericVideo(category, classId, itemIdx) {
@@ -1003,12 +987,10 @@
             if(url.includes('watch?v=')) embedUrl = url.replace('watch?v=', 'embed/');
             else if(url.includes('youtu.be/')) embedUrl = url.replace('youtu.be/', 'youtube.com/embed/');
             else if(url.includes('shorts/')) embedUrl = url.replace('shorts/', 'embed/');
-
             const item = state[category][classId][itemIdx];
             if(!item.media) item.media = [];
             item.media.push({ type: 'video', url: embedUrl });
-            triggerSave();
-            renderApp();
+            triggerSave(); renderApp();
         }
 
         function addFeedVideo(category, classId) {
@@ -1018,51 +1000,42 @@
             if(url.includes('watch?v=')) embedUrl = url.replace('watch?v=', 'embed/');
             else if(url.includes('youtu.be/')) embedUrl = url.replace('youtu.be/', 'youtube.com/embed/');
             else if(url.includes('shorts/')) embedUrl = url.replace('shorts/', 'embed/');
-            
             if(!state[category]) state[category] = {};
             if(!state[category][classId]) state[category][classId] = [];
             state[category][classId].unshift({ type: 'video', url: embedUrl, desc: '' });
-            triggerSave();
-            renderApp();
+            triggerSave(); renderApp();
         }
 
         function addClass() {
             const name = prompt("Enter new Grade/Class Name (e.g., Grade 7 (2027-28)):");
             if (!name) return;
-            
             const newId = 'class_' + Date.now();
             state.classes.unshift({ id: newId, name: name, year: '', subjects: [] });
-            
             ['extracurriculars', 'hobbies', 'achievements', 'photoFeed'].forEach(cat => {
                 if (!state[cat]) state[cat] = {};
                 state[cat][newId] = [];
             });
-            
-            triggerSave();
-            renderApp();
+            triggerSave(); renderApp();
             showToast("New Grade Added Successfully!", "fa-circle-check", "text-emerald-400");
         }
 
         function addSubject(classId) {
             const cls = state.classes.find(c => c.id === classId);
             cls.subjects.push({ id: 'sub_' + Date.now(), name: 'New Subject', description: '', projects: [] });
-            triggerSave();
-            renderApp();
+            triggerSave(); renderApp();
         }
 
         function addProjectCard(cId, sId) {
             const sub = state.classes.find(c => c.id === cId).subjects.find(s => s.id === sId);
             if(!sub.projects) sub.projects = [];
             sub.projects.unshift({ title: 'New Project', desc: '', media: [] });
-            triggerSave();
-            renderApp();
+            triggerSave(); renderApp();
         }
 
         function removeProjectCard(cId, sId, idx) {
             if(confirm('Are you sure you want to remove this project?')) {
                 state.classes.find(c => c.id === cId).subjects.find(s => s.id === sId).projects.splice(idx, 1);
-                triggerSave();
-                renderApp();
+                triggerSave(); renderApp();
             }
         }
 
@@ -1070,24 +1043,22 @@
             if(!state[category]) state[category] = {};
             if(!state[category][classId]) state[category][classId] = [];
             state[category][classId].unshift({ title: 'New Item', desc: '', media: [] });
-            triggerSave();
-            renderApp();
+            triggerSave(); renderApp();
         }
 
         function removeGenericItem(category, classId, idx) {
             if(confirm('Are you sure you want to remove this item?')) {
                 state[category][classId].splice(idx, 1);
-                triggerSave();
-                renderApp();
+                triggerSave(); renderApp();
             }
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            // Force About Me as the default landing view
+            // ONLY set the default state to 'about'. 
+            // DO NOT render the dummy blueprint! The Firebase loader handles the initial render.
             if (!state.currentView || state.currentView === 'subject' || state.currentView === 'category') {
                 state.currentView = 'about';
             }
-            renderApp();
         });
     </script>
 </body>
