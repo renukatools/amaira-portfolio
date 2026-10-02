@@ -20,7 +20,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
     <script>
-        // 1. PASTE YOUR FIREBASE KEYS HERE
+        // PASTE YOUR FIREBASE KEYS HERE
         const firebaseConfig = {
             apiKey: "AIzaSyDNP7Rc50smJ3QeAOZozQ7220CrjkEiEcY",
             authDomain: "amaira--digital-portfolio.firebaseapp.com",
@@ -34,14 +34,13 @@
         const db = firebase.firestore();
         const auth = firebase.auth();
 
-        // 2. PASTE YOUR IMGBB API KEY HERE
+        // PASTE YOUR IMGBB API KEY HERE
         const IMGBB_API_KEY = "a6c8e02c15899509447d65b571eefb92";
     </script>
 
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
         
-        /* Premium Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #93c5fd; border-radius: 10px; }
@@ -49,13 +48,11 @@
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Edit Mode Logic */
         .edit-controls-flex { display: none !important; }
         .edit-controls-block { display: none !important; }
         body.edit-mode .edit-controls-flex { display: flex !important; }
         body.edit-mode .edit-controls-block { display: block !important; }
         
-        /* Editable Borders */
         body:not(.edit-mode) .editable-border { border: 1px solid transparent !important; pointer-events: none; }
         body.edit-mode .editable-border { border: 1px dashed #94a3b8 !important; border-radius: 0.5rem; transition: all 0.2s; }
         body.edit-mode .editable-border:focus { border-color: #2563eb !important; background: #f8fafc; outline: none; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
@@ -65,7 +62,6 @@
         body:not(.edit-mode) .hide-if-empty:empty,
         body:not(.edit-mode) .hide-if-no-media:not(:has(img)):not(:has(iframe)) { display: none !important; }
 
-        /* Sidebar Logic */
         #app-sidebar { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         #app-sidebar.collapsed { width: 5.5rem; }
         #app-sidebar.collapsed .hide-on-collapse { display: none; opacity: 0; }
@@ -80,7 +76,6 @@
             .mobile-overlay.show { display: block; }
         }
 
-        /* Animations */
         #toast-notification { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s; transform: translateY(100px); opacity: 0; z-index: 99999; }
         #toast-notification.show { transform: translateY(0); opacity: 1; }
 
@@ -90,7 +85,6 @@
         .wave-emoji { display: inline-block; animation: wave 2.5s infinite; transform-origin: 70% 70%; }
         @keyframes wave { 0% { transform: rotate( 0.0deg) } 10% { transform: rotate(14.0deg) } 20% { transform: rotate(-8.0deg) } 30% { transform: rotate(14.0deg) } 40% { transform: rotate(-4.0deg) } 50% { transform: rotate(10.0deg) } 60% { transform: rotate( 0.0deg) } 100% { transform: rotate( 0.0deg) } }
 
-        /* Premium Glass & Tree Menu */
         .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.5); }
         .tree-line { position: relative; }
         .tree-line::before { content: ''; position: absolute; left: 19px; top: 0; bottom: 0; width: 2px; background: #e2e8f0; border-radius: 2px; z-index: 0; }
@@ -183,7 +177,6 @@
     </main>
 
     <script>
-        // Default Blueprint State
         let state = {
             isEditMode: false,
             isSidebarCollapsed: false,
@@ -234,7 +227,8 @@
                     }
                     updateEditModeUI();
                     
-                    if (document.getElementById('global-loader').style.display === 'none') {
+                    const loader = document.getElementById('global-loader');
+                    if(loader && loader.style.display === 'none') {
                         renderApp();
                     }
                 });
@@ -246,8 +240,10 @@
         async function loadFromFirebase() {
             try {
                 const docRef = db.collection('portfolioData').doc(DOC_ID);
-                const docSnap = await docRef.get();
-                if (docSnap.exists) {
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Firebase Timeout')), 4000));
+                const docSnap = await Promise.race([docRef.get(), timeoutPromise]);
+
+                if (docSnap && docSnap.exists) {
                     let dbData = docSnap.data();
                     
                     delete dbData.currentView;
@@ -277,7 +273,7 @@
                     state = { ...state, ...dbData };
                 }
             } catch (e) {
-                console.error("Error loading data:", e);
+                console.warn("Loading from local fallback state due to network/timeout:", e);
             } finally {
                 state.currentView = 'about';
                 renderApp(); 
@@ -303,7 +299,6 @@
                     if(syncBadge) syncBadge.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i><span class="hidden sm:inline">Synced</span>`;
                 } catch (e) { 
                     console.error("Cloud Save Error:", e);
-                    alert("⚠️️ CLOUD SAVE FAILED: " + e.message);
                     if(syncBadge) syncBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-500"></i><span class="hidden sm:inline text-rose-500">Failed</span>`;
                 }
             }, 500);
@@ -322,7 +317,7 @@
                     await auth.signInWithEmailAndPassword(email, pass);
                     showToast("Admin access granted");
                 } catch (e) {
-                    alert("Login failed: " + e.message);
+                    showToast("Login failed: " + e.message);
                 }
             }
         }
@@ -424,7 +419,6 @@
             });
         }
 
-        // --- BREADCRUMB SITE MAP ---
         function renderBreadcrumbs() {
             const bc = document.getElementById('breadcrumb-container');
             const firstName = state.profile.name.split(' ')[0] || 'Amaira';
@@ -594,7 +588,6 @@
             
             state.sections.forEach(sec => {
                 if (sec.isAcademic) {
-                    // Academics Card with collapsible class dropdowns
                     quickLinksCardsHtml += `
                         <div class="glass-card rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col bg-white overflow-hidden">
                             <div onclick="toggleShortcut(event, '${sec.id}')" class="cursor-pointer p-4 md:p-5 flex flex-col items-center justify-center text-center aspect-square group relative hover:bg-slate-50 transition-colors">
@@ -629,7 +622,6 @@
                         </div>
                     `;
                 } else {
-                    // Beyond Academics individual subcategories cards
                     (sec.categories || []).forEach(cat => {
                         let icon = cat === 'photoFeed' ? 'fa-images' : (cat === 'achievements' ? 'fa-trophy' : (cat === 'hobbies' ? 'fa-palette' : 'fa-medal'));
                         let color = cat === 'photoFeed' ? 'text-pink-500' : (cat === 'achievements' ? 'text-amber-500' : (cat === 'hobbies' ? 'text-purple-500' : 'text-emerald-500'));
@@ -987,7 +979,6 @@
                 content.style.maxHeight = content.scrollHeight + 'px';
                 icon.style.transform = 'rotate(180deg)';
                 content.style.opacity = '1';
-                // Expand parent accordion as well so the dropdown isn't clipped
                 const parentCard = content.closest('[id^="shortcut-content-"]');
                 if (parentCard) {
                     parentCard.style.maxHeight = (parentCard.scrollHeight + content.scrollHeight) + 'px';
@@ -997,7 +988,7 @@
 
         function uploadImageToWeb(file, callback) {
             if (!IMGBB_API_KEY || IMGBB_API_KEY === "PASTE_YOUR_IMGBB_KEY_HERE") {
-                alert("Please paste your ImgBB API Key in the code first!");
+                showToast("Please add your ImgBB API Key first!");
                 return;
             }
 
@@ -1032,7 +1023,7 @@
                     })
                     .catch(err => {
                         console.error("ImgBB Error:", err);
-                        alert("Upload Failed. Check connection or API Key.");
+                        showToast("Upload Failed. Check ImgBB Key.");
                         if(syncBadge) syncBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-500"></i><span class="hidden sm:inline text-rose-500">Failed</span>`;
                     });
                 };
@@ -1114,10 +1105,9 @@
 
         function removeSection(e, secId) {
             e.stopPropagation();
-            if(confirm("Are you sure you want to completely remove this main section?")) {
-                state.sections = state.sections.filter(s => s.id !== secId);
-                triggerSave(); renderApp();
-            }
+            state.sections = state.sections.filter(s => s.id !== secId);
+            triggerSave(); renderApp();
+            showToast("Section removed");
         }
 
         function addCategory(secId) {
@@ -1136,11 +1126,10 @@
 
         function removeCategory(e, secId, catId) {
             e.stopPropagation();
-            if(confirm("Are you sure you want to remove this category?")) {
-                const sec = state.sections.find(s => s.id === secId);
-                if(sec && sec.categories) sec.categories = sec.categories.filter(c => c !== catId);
-                triggerSave(); renderApp();
-            }
+            const sec = state.sections.find(s => s.id === secId);
+            if(sec && sec.categories) sec.categories = sec.categories.filter(c => c !== catId);
+            triggerSave(); renderApp();
+            showToast("Category removed");
         }
 
         function addClass() {
@@ -1175,10 +1164,9 @@
         }
 
         function removeProjectCard(cId, sId, idx) {
-            if(confirm('Are you sure you want to remove this project?')) {
-                state.classes.find(c => c.id === cId).subjects.find(s => s.id === sId).projects.splice(idx, 1);
-                triggerSave(); renderApp();
-            }
+            state.classes.find(c => c.id === cId).subjects.find(s => s.id === sId).projects.splice(idx, 1);
+            triggerSave(); renderApp();
+            showToast("Project removed");
         }
 
         function addGenericItem(category, classId) {
@@ -1189,10 +1177,9 @@
         }
 
         function removeGenericItem(category, classId, idx) {
-            if(confirm('Are you sure you want to remove this item?')) {
-                state[category][classId].splice(idx, 1);
-                triggerSave(); renderApp();
-            }
+            state[category][classId].splice(idx, 1);
+            triggerSave(); renderApp();
+            showToast("Item removed");
         }
     </script>
 </body>
