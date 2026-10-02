@@ -128,7 +128,7 @@
         <button onclick="event.stopPropagation(); modalChangeSlide(1)" class="absolute right-2 md:right-10 top-1/2 -translate-y-1/2 text-white/50 hover:text-white text-3xl md:text-5xl z-50 p-4 transition transform hover:scale-110"><i class="fa-solid fa-chevron-right"></i></button>
     </div>
 
-    <!-- Custom Action Modal -->
+    <!-- Custom Action Modal (Replaces native alerts/prompts/confirms) -->
     <div id="action-modal" class="fixed inset-0 z-[999999] hidden bg-slate-900/60 backdrop-blur-sm flex flex-col items-center justify-center opacity-0 transition-opacity duration-300">
         <div class="bg-white rounded-[2rem] p-8 shadow-2xl max-w-sm w-full mx-4 transform scale-95 transition-transform duration-300" id="action-modal-panel">
             <h3 id="action-modal-title" class="text-xl font-extrabold text-slate-800 mb-2"></h3>
@@ -172,8 +172,31 @@
         </div>
 
         <!-- Navigation Menu (Dynamic Tree) -->
-        <nav class="flex-1 p-4 space-y-4" id="sidebar-nav"></nav>
+        <nav class="p-4 space-y-4" id="sidebar-nav"></nav>
 
+        <!-- Footer with Minimal Lock Icon & Theme Picker -->
+        <div class="p-4 border-t border-slate-100/50 bg-slate-50/50 flex flex-col space-y-3 mt-4 flex-shrink-0">
+            <div class="flex justify-between items-center hide-on-collapse">
+                <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest edit-controls-block">Color Theme</span>
+                <button onclick="handleAdminLoginToggle()" id="admin-lock-btn" class="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all ml-auto" title="Admin Login">
+                    <i class="fa-solid fa-lock text-sm"></i>
+                </button>
+            </div>
+            
+            <!-- Color Theme Selector (Admin Mode Only) -->
+            <div class="edit-controls-flex items-center justify-between hide-on-collapse pb-1">
+                <button onclick="setTheme('blue')" title="Ocean Blue" class="w-6 h-6 rounded-full bg-blue-600 hover:scale-110 transition shadow-sm" id="theme-btn-blue"></button>
+                <button onclick="setTheme('pink')" title="Rose Pink" class="w-6 h-6 rounded-full bg-pink-600 hover:scale-110 transition shadow-sm" id="theme-btn-pink"></button>
+                <button onclick="setTheme('emerald')" title="Emerald Green" class="w-6 h-6 rounded-full bg-emerald-600 hover:scale-110 transition shadow-sm" id="theme-btn-emerald"></button>
+                <button onclick="setTheme('violet')" title="Royal Violet" class="w-6 h-6 rounded-full bg-violet-600 hover:scale-110 transition shadow-sm" id="theme-btn-violet"></button>
+                <button onclick="setTheme('amber')" title="Sunset Amber" class="w-6 h-6 rounded-full bg-amber-600 hover:scale-110 transition shadow-sm" id="theme-btn-amber"></button>
+            </div>
+            
+            <!-- Mobile Admin Lock Button (Only visible on collapsed mobile) -->
+            <div class="md:hidden flex justify-center center-on-collapse" id="admin-lock-btn-mobile" style="display: none;">
+                <button onclick="handleAdminLoginToggle()" class="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all"><i class="fa-solid fa-lock text-sm" id="mobile-lock-icon"></i></button>
+            </div>
+        </div>
     </aside>
 
     <!-- Main Content -->
@@ -269,7 +292,7 @@
                     
                     { id: 'phone_1', label: 'Contact Number', value: '+91 98765 43210', isVisible: true, icon: 'fa-phone' },
                     { id: 'phone_2', label: 'Mobile 2', value: '+91 XXXXX XXXXX', isVisible: false, icon: 'fa-mobile-screen' },
-                    { id: 'phone_3', label: 'Mobile 3', value: '+91 XXXXX XXXXX', isVisible: false, icon: 'fa-phone-flip' },
+                    { id: 'phone_3', label: 'WhatsApp', value: '+91 XXXXX XXXXX', isVisible: false, icon: 'fa-whatsapp' },
                     
                     { id: 'web_1', label: 'Website', value: 'www.myportfolio.com', isVisible: false, icon: 'fa-globe' },
                     { id: 'web_2', label: 'Blog', value: 'www.myblog.com', isVisible: false, icon: 'fa-link' },
@@ -284,18 +307,8 @@
                     { id: 'ig_2', label: 'Instagram 2', link: '', isVisible: false, icon: 'fa-instagram', color: 'text-pink-600' },
                     { id: 'fb_1', label: 'Facebook', link: '', isVisible: true, icon: 'fa-facebook', color: 'text-blue-500' },
                     { id: 'fb_2', label: 'Facebook 2', link: '', isVisible: false, icon: 'fa-facebook', color: 'text-blue-500' },
-                    { id: 'wa_1', label: 'WhatsApp', link: '', isVisible: true, icon: 'fa-whatsapp', color: 'text-emerald-500' },
-                    { id: 'wa_2', label: 'WhatsApp 2', link: '', isVisible: false, icon: 'fa-whatsapp', color: 'text-emerald-500' },
-                    { id: 'snap_1', label: 'Snapchat', link: '', isVisible: true, icon: 'fa-snapchat', color: 'text-yellow-400' },
-                    { id: 'snap_2', label: 'Snapchat 2', link: '', isVisible: false, icon: 'fa-snapchat', color: 'text-yellow-400' },
-                    { id: 'msg_1', label: 'Messenger', link: '', isVisible: true, icon: 'fa-facebook-messenger', color: 'text-blue-500' },
-                    { id: 'msg_2', label: 'Messenger 2', link: '', isVisible: false, icon: 'fa-facebook-messenger', color: 'text-blue-500' },
-                    { id: 'x_1', label: 'X (Twitter)', link: '', isVisible: true, icon: 'fa-x-twitter', color: 'text-slate-800' },
+                    { id: 'x_1', label: 'X (Twitter)', link: '', isVisible: false, icon: 'fa-x-twitter', color: 'text-slate-800' },
                     { id: 'x_2', label: 'X (Twitter) 2', link: '', isVisible: false, icon: 'fa-x-twitter', color: 'text-slate-800' },
-                    { id: 'rd_1', label: 'Reddit', link: '', isVisible: true, icon: 'fa-reddit-alien', color: 'text-orange-600' },
-                    { id: 'rd_2', label: 'Reddit 2', link: '', isVisible: false, icon: 'fa-reddit-alien', color: 'text-orange-600' },
-                    { id: 'th_1', label: 'Threads', link: '', isVisible: true, icon: 'fa-threads', color: 'text-slate-900' },
-                    { id: 'th_2', label: 'Threads 2', link: '', isVisible: false, icon: 'fa-threads', color: 'text-slate-900' },
                     { id: 'gh_1', label: 'GitHub', link: '', isVisible: false, icon: 'fa-github', color: 'text-slate-800' },
                     { id: 'gh_2', label: 'GitHub 2', link: '', isVisible: false, icon: 'fa-github', color: 'text-slate-800' },
                     { id: 'pi_1', label: 'Pinterest', link: '', isVisible: false, icon: 'fa-pinterest', color: 'text-red-600' },
@@ -351,15 +364,12 @@
                         ];
                     }
                     
+                    // Merge and ensure massive contact default options are preserved even on old databases
                     if (!dbData.contact) {
                         dbData.contact = state.contact;
-                    } else {
-                        if (!dbData.contact.details || dbData.contact.details.length <= 5) {
-                            dbData.contact.details = state.contact.details;
-                        }
-                        if (!dbData.contact.socials || dbData.contact.socials.length <= 5) {
-                            dbData.contact.socials = state.contact.socials;
-                        }
+                    } else if (dbData.contact.details && dbData.contact.details.length <= 5) {
+                        dbData.contact.details = state.contact.details;
+                        dbData.contact.socials = state.contact.socials;
                     }
                     
                     state = { ...state, ...dbData };
@@ -410,6 +420,7 @@
             showToast(`Theme changed to ${themes[themeName].name}!`);
         }
 
+        // Custom Modal Function (Replaces native prompt/confirm/alert)
         function askUser(options) {
             const modal = document.getElementById('action-modal');
             const panel = document.getElementById('action-modal-panel');
@@ -509,6 +520,7 @@
             sidebar.classList.toggle('collapsed', state.isSidebarCollapsed);
             icon.className = state.isSidebarCollapsed ? "fa-solid fa-chevron-right text-[10px]" : "fa-solid fa-chevron-left text-[10px]";
             
+            // Adjust mobile lock button visibility
             const mobileLock = document.getElementById('admin-lock-btn-mobile');
             if (mobileLock) {
                 mobileLock.style.display = state.isSidebarCollapsed ? 'flex' : 'none';
@@ -553,24 +565,6 @@
                 document.getElementById('mobile-sidebar-overlay').classList.remove('show');
             }
             renderApp();
-            
-            // Foolproof viewport scroll to absolute top
-            const vp = document.getElementById('main-content-viewport');
-            if (vp) {
-                // Temporarily disable smooth scroll so DOM rebuild doesn't interrupt the jump
-                vp.classList.remove('scroll-smooth');
-                vp.scrollTop = 0;
-                
-                // Backup timeouts for when textareas resize dynamically pushing the page down
-                setTimeout(() => { if (vp) vp.scrollTop = 0; }, 10);
-                setTimeout(() => { if (vp) vp.scrollTop = 0; }, 60);
-                setTimeout(() => { 
-                    if (vp) { 
-                        vp.scrollTop = 0; 
-                        vp.classList.add('scroll-smooth'); 
-                    } 
-                }, 250);
-            }
         }
 
         function updateEditModeUI() {
@@ -638,10 +632,8 @@
                     else if (field === 'contact.subtitle') state.contact.subtitle = val;
                     else if (field === 'contactDetail.label') state.contact.details[ids[0]].label = val;
                     else if (field === 'contactDetail.value') state.contact.details[ids[0]].value = val;
-                    else if (field === 'contactDetail.icon') state.contact.details[ids[0]].icon = val;
                     else if (field === 'contactSocial.label') state.contact.socials[ids[0]].label = val;
                     else if (field === 'contactSocial.link') state.contact.socials[ids[0]].link = val;
-                    else if (field === 'contactSocial.icon') state.contact.socials[ids[0]].icon = val;
 
                     document.querySelectorAll(`[data-sync="${field}_${ids.join('_')}"]`).forEach(el => el.innerText = val);
                     triggerSave();
@@ -649,6 +641,7 @@
             });
         }
 
+        // Automatic link formatter for emails, websites, and phone numbers
         function getContactLink(value) {
             if (!value) return '';
             const cleaned = value.trim();
@@ -660,7 +653,7 @@
         }
 
         function handleBreadcrumbNavigation(type, args) {
-            openSidebarMenu(args[0], args[1]); 
+            openSidebarMenu(args[0], args[1]); // Ensure it opens gracefully in mobile UI
             if(type === 'section') switchView('section', args[1]);
             else if(type === 'subject') switchView('subject', args[1], args[2], args[3]);
             else if(type === 'category') switchView('category', args[1], args[2], null, args[3]);
@@ -699,11 +692,10 @@
         function renderSidebarNav() {
             const nav = document.getElementById('sidebar-nav');
             let html = `
-                <div class="space-y-4 mb-auto">
-                    <div onclick="handleIconClick(event, () => switchView('about'))" class="flex items-center space-x-3 p-3 rounded-xl cursor-pointer transition ${state.currentView === 'about' ? 'shadow-md text-white font-bold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'} center-on-collapse mb-4" ${state.currentView === 'about' ? 'style="background-color: var(--theme-primary);"' : ''}>
-                        <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${state.currentView === 'about' ? 'text-white' : 'bg-white shadow-sm text-slate-500'}"><i class="fa-solid fa-user text-sm"></i></div>
-                        <span class="text-sm truncate hide-on-collapse">About Me</span>
-                    </div>
+                <div onclick="handleIconClick(event, () => switchView('about'))" class="flex items-center space-x-3 p-3 rounded-xl cursor-pointer transition ${state.currentView === 'about' ? 'shadow-md text-white font-bold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'} center-on-collapse mb-4" ${state.currentView === 'about' ? 'style="background-color: var(--theme-primary);"' : ''}>
+                    <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${state.currentView === 'about' ? 'text-white' : 'bg-white shadow-sm text-slate-500'}"><i class="fa-solid fa-user text-sm"></i></div>
+                    <span class="text-sm truncate hide-on-collapse">About Me</span>
+                </div>
             `;
 
             state.sections.forEach(sec => {
@@ -802,27 +794,20 @@
             
             html += `<button onclick="addSection()" class="edit-controls-flex w-full items-center justify-center space-x-2 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 py-3 mt-6 rounded-xl hide-on-collapse transition border border-indigo-100"><i class="fa-solid fa-plus"></i><span>New Main Section</span></button>`;
 
+            // Contact Me Menu Link
             if (state.contact.isVisible || state.isEditMode) {
                 const hiddenClass = !state.contact.isVisible ? 'opacity-60 grayscale' : '';
                 const hideIcon = !state.contact.isVisible ? '<i class="fa-solid fa-eye-slash text-[10px] text-rose-500 edit-controls-block ml-2"></i>' : '';
-                const isContactActive = state.currentView === 'contact';
-                
-                const contactBgClass = isContactActive 
-                    ? 'shadow-md text-white font-bold' 
-                    : 'text-[var(--theme-primary)] hover:brightness-95 border border-[var(--theme-border)] bg-[var(--theme-light)] font-bold';
-                
                 html += `
-                    <div onclick="handleIconClick(event, () => switchView('contact'))" class="mt-8 flex items-center justify-between p-3 rounded-xl cursor-pointer transition ${contactBgClass} center-on-collapse ${hiddenClass}" ${isContactActive ? 'style="background-color: var(--theme-primary);"' : ''}>
+                    <div onclick="handleIconClick(event, () => switchView('contact'))" class="mt-6 flex items-center justify-between p-3 rounded-xl cursor-pointer transition ${state.currentView === 'contact' ? 'shadow-md text-white font-bold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'} center-on-collapse ${hiddenClass}" ${state.currentView === 'contact' ? 'style="background-color: var(--theme-primary);"' : ''}>
                         <div class="flex items-center space-x-3 min-w-0 w-full">
-                            <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${isContactActive ? 'text-white' : 'bg-white shadow-sm text-[var(--theme-primary)]'}"><i class="fa-solid fa-address-card text-sm"></i></div>
-                            <textarea rows="1" data-field="contact.title" class="w-full text-sm truncate hide-on-collapse bg-transparent editable-border p-0 resize-none overflow-hidden cursor-pointer ${isContactActive ? 'text-white' : ''}" onclick="event.stopPropagation()">${state.contact.title}</textarea>
+                            <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${state.currentView === 'contact' ? 'text-white' : 'bg-white shadow-sm text-slate-500'}"><i class="fa-solid fa-address-card text-sm"></i></div>
+                            <textarea rows="1" data-field="contact.title" class="w-full text-sm truncate hide-on-collapse bg-transparent editable-border p-0 resize-none overflow-hidden cursor-pointer ${state.currentView === 'contact' ? 'text-white' : ''}" onclick="event.stopPropagation()">${state.contact.title}</textarea>
                         </div>
                         ${hideIcon}
                     </div>
                 `;
             }
-
-            html += `</div>`; 
 
             nav.innerHTML = html;
         }
@@ -860,11 +845,6 @@
                 contentHtml = renderContact();
             }
 
-            // Append Global Footer Quicklink automatically to all interior pages
-            if (state.currentView !== 'about' && state.currentView !== 'contact') {
-                contentHtml += renderGlobalContactFooter();
-            }
-
             vp.innerHTML = contentHtml;
 
             attachInputListeners();
@@ -872,31 +852,6 @@
             
             setTimeout(resizeAllTextareas, 50);
             setTimeout(resizeAllTextareas, 200);
-        }
-
-        function renderGlobalContactFooter() {
-            if (!state.contact.isVisible && !state.isEditMode) return '';
-            const hiddenClass = !state.contact.isVisible ? 'opacity-60 grayscale border-dashed' : '';
-            const hideIcon = !state.contact.isVisible ? '<i class="fa-solid fa-eye-slash text-rose-500 ml-2 text-xs"></i>' : '';
-            
-            return `
-                <div class="max-w-4xl mx-auto mt-12 mb-4 min-w-0 ${hiddenClass}">
-                    <div onclick="switchView('contact')" class="glass-card rounded-[2rem] p-6 shadow-md hover:shadow-lg transition-all duration-300 bg-white border border-slate-100 flex items-center justify-between cursor-pointer group">
-                        <div class="flex items-center space-x-4 min-w-0">
-                            <div class="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform flex-shrink-0" style="color: var(--theme-primary);">
-                                <i class="fa-solid fa-address-card text-xl"></i>
-                            </div>
-                            <div class="truncate">
-                                <h3 class="font-extrabold text-lg text-slate-800 group-hover:text-[var(--theme-primary)] transition-colors truncate">${state.contact.title}${hideIcon}</h3>
-                                <p class="text-xs md:text-sm font-medium text-slate-500 truncate">${state.contact.subtitle}</p>
-                            </div>
-                        </div>
-                        <div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-[var(--theme-primary)] group-hover:text-white transition-colors flex-shrink-0 ml-4">
-                            <i class="fa-solid fa-arrow-right"></i>
-                        </div>
-                    </div>
-                </div>
-            `;
         }
 
         function renderContact() {
@@ -918,26 +873,21 @@
                     <div class="space-y-4">
                         <div class="flex items-center justify-between px-2">
                             <h3 class="text-xl font-extrabold text-slate-800">Direct Contact</h3>
-                            <button onclick="addContactDetail()" class="edit-controls-flex items-center space-x-1.5 text-xs font-bold text-[var(--theme-primary)] hover:bg-[var(--theme-light)] px-3 py-1.5 rounded-lg transition border border-transparent hover:border-[var(--theme-border)]"><i class="fa-solid fa-plus"></i><span>Add Detail</span></button>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             ${state.contact.details.map((detail, idx) => {
                                 let linkHref = getContactLink(detail.value);
                                 return `
                                 <div class="glass-card rounded-[2rem] p-6 shadow-sm bg-white border border-slate-100 relative group ${!detail.isVisible ? 'edit-mode-hidden-item' : ''}" style="${!detail.isVisible && !state.isEditMode ? 'display:none;' : ''}">
-                                    <div class="edit-controls-flex absolute top-4 right-4 space-x-2 z-10">
+                                    <div class="edit-controls-flex absolute top-4 right-4 space-x-2">
                                         <button onclick="toggleContactItem('details', ${idx})" class="text-slate-400 hover:text-slate-600 bg-slate-50 p-2 rounded-xl transition" title="Toggle Visibility">
-                                            <i class="fa-solid ${detail.isVisible ? 'fa-eye' : 'fa-eye-slash'} text-[10px]"></i>
-                                        </button>
-                                        <button onclick="removeContactItem('details', ${idx})" class="text-rose-400 hover:text-rose-600 bg-rose-50 p-2 rounded-xl transition" title="Delete Field">
-                                            <i class="fa-solid fa-trash text-[10px]"></i>
+                                            <i class="fa-solid ${detail.isVisible ? 'fa-eye' : 'fa-eye-slash'}"></i>
                                         </button>
                                     </div>
                                     
                                     <div class="flex items-start space-x-4">
-                                        <div class="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center flex-shrink-0 relative" style="color: var(--theme-primary);">
+                                        <div class="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center flex-shrink-0" style="color: var(--theme-primary);">
                                             <i class="fa-solid ${detail.icon || 'fa-circle-dot'} text-xl"></i>
-                                            ${state.isEditMode ? `<input type="text" data-field="contactDetail.icon" data-ids="${idx}" class="absolute -bottom-6 w-full text-[8px] text-center bg-transparent border-b border-blue-200 outline-none" value="${detail.icon || 'fa-circle-dot'}" title="Edit FontAwesome icon class">` : ''}
                                         </div>
                                         <div class="flex-1 min-w-0 pr-16">
                                             <textarea rows="1" data-field="contactDetail.label" data-ids="${idx}" class="w-full text-xs font-bold text-slate-400 uppercase tracking-wider bg-transparent editable-border p-0 resize-none overflow-hidden">${detail.label}</textarea>
@@ -957,21 +907,16 @@
                     <div class="space-y-4 pt-6">
                         <div class="flex items-center justify-between px-2">
                             <h3 class="text-xl font-extrabold text-slate-800">Connect Online</h3>
-                            <button onclick="addContactSocial()" class="edit-controls-flex items-center space-x-1.5 text-xs font-bold text-[var(--theme-primary)] hover:bg-[var(--theme-light)] px-3 py-1.5 rounded-lg transition border border-transparent hover:border-[var(--theme-border)]"><i class="fa-solid fa-plus"></i><span>Add Social Link</span></button>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             ${state.contact.socials.map((social, idx) => `
                                 <div class="glass-card rounded-[1.5rem] p-5 shadow-sm bg-white border border-slate-100 relative group flex flex-col items-center text-center ${!social.isVisible ? 'edit-mode-hidden-item' : ''}" style="${!social.isVisible && !state.isEditMode ? 'display:none;' : ''}">
-                                    <div class="edit-controls-flex absolute top-3 right-3 space-x-1 z-10">
+                                    <div class="edit-controls-flex absolute top-3 right-3 space-x-1">
                                         <button onclick="toggleContactItem('socials', ${idx})" class="text-slate-400 hover:text-slate-600 bg-slate-50 p-2 rounded-xl transition" title="Toggle Visibility">
                                             <i class="fa-solid ${social.isVisible ? 'fa-eye' : 'fa-eye-slash'} text-[10px]"></i>
                                         </button>
-                                        <button onclick="removeContactItem('socials', ${idx})" class="text-rose-400 hover:text-rose-600 bg-rose-50 p-2 rounded-xl transition" title="Delete Field">
-                                            <i class="fa-solid fa-trash text-[10px]"></i>
-                                        </button>
                                     </div>
                                     <i class="fa-brands ${social.icon || 'fa-globe'} text-3xl ${social.color || 'text-slate-700'} mb-3 mt-2"></i>
-                                    ${state.isEditMode ? `<input type="text" data-field="contactSocial.icon" data-ids="${idx}" class="w-full text-[8px] text-slate-400 text-center bg-transparent border-b border-slate-200 outline-none mb-2" value="${social.icon || 'fa-globe'}" title="Edit FontAwesome icon class">` : ''}
                                     <textarea rows="1" data-field="contactSocial.label" data-ids="${idx}" class="w-full text-sm font-extrabold text-slate-800 text-center bg-transparent editable-border p-0 resize-none overflow-hidden">${social.label}</textarea>
                                     
                                     ${state.isEditMode ? `
@@ -994,27 +939,6 @@
 
         function toggleContactItem(type, idx) {
             state.contact[type][idx].isVisible = !state.contact[type][idx].isVisible;
-            triggerSave(); renderApp();
-        }
-        
-        function removeContactItem(type, idx) {
-            askUser({
-                title: 'Delete this field?',
-                submitText: 'Delete',
-                onSubmit: () => {
-                    state.contact[type].splice(idx, 1);
-                    triggerSave(); renderApp();
-                }
-            });
-        }
-        
-        function addContactDetail() {
-            state.contact.details.push({ id: 'detail_' + Date.now(), label: 'New Field', value: 'Value', isVisible: true, icon: 'fa-circle-dot' });
-            triggerSave(); renderApp();
-        }
-
-        function addContactSocial() {
-            state.contact.socials.push({ id: 'social_' + Date.now(), label: 'New Link', link: '', isVisible: true, icon: 'fa-link', color: 'text-slate-600' });
             triggerSave(); renderApp();
         }
 
@@ -1091,23 +1015,6 @@
                     });
                 }
             });
-
-            // Contact Quicklink Restored
-            if (state.contact.isVisible || state.isEditMode) {
-                const hiddenClass = !state.contact.isVisible ? 'edit-mode-hidden-item' : '';
-                quickLinksCardsHtml += `
-                    <div class="glass-card rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col bg-white overflow-hidden ${hiddenClass}" style="${!state.contact.isVisible && !state.isEditMode ? 'display:none;' : ''}">
-                        <div onclick="switchView('contact')" class="cursor-pointer p-4 md:p-5 flex flex-col items-center justify-center text-center aspect-square group relative hover:bg-blue-50 transition-colors">
-                            <div class="w-14 h-14 md:w-16 md:h-16 rounded-[1.25rem] bg-blue-100/50 flex items-center justify-center mb-2 md:mb-3 group-hover:scale-110 transition-transform shadow-inner flex-shrink-0" style="color: var(--theme-primary);">
-                                <i class="fa-solid fa-address-card text-2xl md:text-3xl"></i>
-                            </div>
-                            <div class="flex items-center justify-center space-x-1.5 w-full px-1">
-                                <span class="font-extrabold text-slate-800 text-xs md:text-sm leading-snug break-words text-center">${state.contact.title}</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
 
             return `
                 <div class="max-w-6xl mx-auto space-y-10 min-w-0 pb-10">
@@ -1653,7 +1560,7 @@
                 });
             });
         }
-        
+
         function addAboutVideo() {
             askUser({
                 type: 'prompt',
