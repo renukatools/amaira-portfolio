@@ -65,8 +65,9 @@
         body.edit-mode .editable-border { border: 1px dashed #94a3b8 !important; border-radius: 0.5rem; transition: all 0.2s; }
         body.edit-mode .editable-border:focus { border-color: var(--theme-primary) !important; background: #f8fafc; outline: none; box-shadow: 0 0 0 3px var(--theme-light); }
 
-        body:not(.edit-mode) textarea:placeholder-shown,
-        body:not(.edit-mode) input:placeholder-shown,
+        /* FIXED: Only hide empty portfolio data fields, not login inputs! */
+        body:not(.edit-mode) textarea[data-field]:placeholder-shown,
+        body:not(.edit-mode) input[data-field]:placeholder-shown,
         body:not(.edit-mode) .hide-if-empty:empty,
         body:not(.edit-mode) .hide-if-no-media:not(:has(img)):not(:has(iframe)) { display: none !important; }
 
@@ -333,8 +334,14 @@
             
             if (typeof auth !== 'undefined') {
                 auth.onAuthStateChanged(user => {
+                    const prevMode = state.isEditMode;
                     state.isEditMode = !!user;
                     updateEditModeUI();
+                    
+                    // RE-RENDER: This ensures hidden edit controls instantly appear when logging in
+                    if (prevMode !== state.isEditMode && state.sections) {
+                        renderApp();
+                    }
                 });
             }
             
@@ -458,6 +465,11 @@
             
             submitBtn.innerText = options.submitText || 'Submit';
             
+            // Added mobile keyboard support (Enter key to submit)
+            const handleEnter = (e) => { if (e.key === 'Enter') submitBtn.click(); };
+            input1.addEventListener('keypress', handleEnter);
+            input2.addEventListener('keypress', handleEnter);
+
             const cleanup = () => {
                 modal.classList.add('opacity-0');
                 panel.classList.remove('scale-100');
@@ -465,6 +477,8 @@
                 setTimeout(() => modal.classList.add('hidden'), 300);
                 submitBtn.onclick = null;
                 cancelBtn.onclick = null;
+                input1.removeEventListener('keypress', handleEnter);
+                input2.removeEventListener('keypress', handleEnter);
             };
             
             cancelBtn.onclick = cleanup;
@@ -506,7 +520,7 @@
                             await auth.signInWithEmailAndPassword(email, pass);
                             showToast("Admin access granted");
                         } catch (e) {
-                            showToast("Login failed: " + e.message);
+                            showToast("Login failed: Check credentials.");
                         }
                     }
                 });
@@ -571,14 +585,20 @@
                 document.getElementById('app-sidebar').classList.remove('mobile-open');
                 document.getElementById('mobile-sidebar-overlay').classList.remove('show');
             }
-            renderApp();
             
-            // Foolproof viewport scroll to absolute top with multi-tick reset
+            // Foolproof viewport scroll to absolute top
             const vp = document.getElementById('main-content-viewport');
             if (vp) {
                 vp.classList.remove('scroll-smooth');
                 vp.style.scrollBehavior = 'auto';
-                
+                vp.scrollTop = 0;
+            }
+            window.scrollTo(0, 0);
+
+            renderApp();
+            
+            // Multi-tick reset to enforce top landing as content draws
+            if (vp) {
                 let attempts = 0;
                 const scrollInterval = setInterval(() => {
                     vp.scrollTop = 0;
