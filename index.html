@@ -72,13 +72,15 @@
         body.edit-mode .editable-border { border: 1px dashed #94a3b8 !important; border-radius: 0.5rem; transition: all 0.2s; }
         body.edit-mode .editable-border:focus { border-color: var(--theme-primary) !important; background: #f8fafc; outline: none; box-shadow: 0 0 0 3px var(--theme-light); }
 
-        body:not(.edit-mode) textarea:placeholder-shown,
-        body:not(.edit-mode) input:placeholder-shown,
+        /* FIXED: Only hide empty portfolio data fields, not login inputs! */
+        body:not(.edit-mode) textarea[data-field]:placeholder-shown,
+        body:not(.edit-mode) input[data-field]:placeholder-shown,
         body:not(.edit-mode) .hide-if-empty:empty,
         body:not(.edit-mode) .hide-if-no-media:not(:has(img)):not(:has(iframe)) { display: none !important; }
 
         body.edit-mode .edit-mode-hidden-item { opacity: 0.6; filter: grayscale(40%); border: 1px dashed #cbd5e1; }
 
+        /* Media Protection */
         .protected-media { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-user-drag: none; pointer-events: auto; }
 
         #app-sidebar { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -849,6 +851,7 @@
             
             html += `<button onclick="addSection()" class="edit-controls-flex w-full items-center justify-center space-x-2 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 py-3 mt-6 rounded-xl hide-on-collapse transition border border-indigo-100"><i class="fa-solid fa-plus"></i><span>New Main Section</span></button>`;
 
+            // Attractive Themed Contact Me Menu Link in Sidebar
             if (state.contact.isVisible || state.isEditMode) {
                 const hiddenClass = !state.contact.isVisible ? 'opacity-60 grayscale' : '';
                 const hideIcon = !state.contact.isVisible ? '<i class="fa-solid fa-eye-slash text-[10px] text-rose-500 edit-controls-block ml-2"></i>' : '';
@@ -901,6 +904,7 @@
                 contentHtml = renderContact();
             }
 
+            // Append Global Footer Quicklink automatically to all interior pages except About & Contact
             vp.innerHTML = contentHtml + renderGlobalContactFooter();
 
             attachInputListeners();
@@ -939,6 +943,7 @@
         function renderContact() {
             return `
                 <div class="max-w-5xl mx-auto space-y-8 min-w-0 pb-10">
+                    <!-- Header -->
                     <div class="glass-card p-8 md:p-10 rounded-[2.5rem] shadow-sm relative flex flex-col md:flex-row md:items-center justify-between gap-4" style="background: var(--theme-gradient); color: white;">
                         <div class="flex-1 min-w-0">
                             <textarea rows="1" data-field="contact.title" class="w-full text-4xl md:text-5xl font-extrabold bg-transparent editable-border py-1 resize-none overflow-hidden leading-tight text-white placeholder-white/50">${state.contact.title}</textarea>
@@ -950,6 +955,7 @@
                         </button>
                     </div>
                     
+                    <!-- Contact Details Grid -->
                     <div class="space-y-4">
                         <div class="flex items-center justify-between px-2">
                             <h3 class="text-xl font-extrabold text-slate-800">Direct Contact</h3>
@@ -987,6 +993,7 @@
                         </div>
                     </div>
 
+                    <!-- Social Media Links -->
                     <div class="space-y-4 pt-6">
                         <div class="flex items-center justify-between px-2">
                             <h3 class="text-xl font-extrabold text-slate-800">Connect Online</h3>
@@ -1124,6 +1131,7 @@
                 }
             });
 
+            // Contact Quicklink Card Restored on About Page
             if (state.contact.isVisible || state.isEditMode) {
                 const hiddenClass = !state.contact.isVisible ? 'edit-mode-hidden-item' : '';
                 quickLinksCardsHtml += `
