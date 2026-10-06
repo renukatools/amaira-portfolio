@@ -145,6 +145,7 @@
 
     <!-- Fullscreen Media Modal -->
     <div id="media-modal" class="fixed inset-0 z-[999999] hidden bg-slate-900/95 backdrop-blur-md flex items-center justify-center opacity-0 transition-opacity duration-300" onclick="closeModal()">
+        <!-- MOBILE FIX: Modal close button pushed down by safe area inset to avoid notch -->
         <button onclick="closeModal()" class="absolute right-6 text-white/70 hover:text-white text-4xl z-50 transition transform hover:scale-110" style="top: max(env(safe-area-inset-top), 1.5rem);"><i class="fa-solid fa-xmark"></i></button>
         
         <div class="relative w-full h-full max-w-6xl max-h-screen p-4 md:p-12 flex items-center justify-center" id="modal-content" onclick="event.stopPropagation()">
@@ -203,7 +204,7 @@
         </div>
     </div>
 
-    <!-- Custom Action Modal -->
+    <!-- Custom Action Modal (Replaces native alerts/prompts/confirms) -->
     <div id="action-modal" class="fixed inset-0 z-[999999] hidden bg-slate-900/60 backdrop-blur-sm flex flex-col items-center justify-center opacity-0 transition-opacity duration-300">
         <div class="bg-white rounded-[2rem] p-8 shadow-2xl max-w-sm w-full mx-4 transform scale-95 transition-transform duration-300" id="action-modal-panel">
             <h3 id="action-modal-title" class="text-xl font-extrabold text-slate-800 mb-2"></h3>
@@ -217,7 +218,7 @@
         </div>
     </div>
 
-    <!-- Toast Notification -->
+    <!-- Toast Notification (With safe-area bottom padding) -->
     <div id="toast-notification" class="fixed right-6 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center space-x-3 text-sm font-medium border border-slate-700" style="bottom: max(env(safe-area-inset-bottom), 1.5rem);">
         <i class="fa-solid fa-circle-check text-emerald-400"></i>
         <span id="toast-msg">Action successful</span>
@@ -405,7 +406,7 @@
 
         const DOC_ID = "AMAIRA_PORTFOLIO_MASTER_DATA_V5";
         window.initialLoadDone = false;
-        window.hasAttemptedMigration = false; // SAFETY LOCK
+        window.hasAttemptedMigration = false;
         let unsubscribeSnapshot = null;
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -425,9 +426,8 @@
                         startAutoSlide();
                     }
                     
-                    // If they just logged in and we haven't done migration yet, we can safely attempt it now
+                    // If they just logged in and we haven't successfully synced migration, reload to trigger it safely
                     if (state.isEditMode && !window.hasAttemptedMigration && unsubscribeSnapshot) {
-                        // The active onSnapshot will naturally pick up any edits, but we can force a reload of the logic block
                         loadFromFirebase();
                     } else if (prevMode !== state.isEditMode && state.mainFolders) {
                         renderApp();
@@ -451,7 +451,6 @@
         async function loadFromFirebase() {
             const docRef = db.collection('portfolioData').doc(DOC_ID);
             
-            // Clean up old listener if re-running
             if (unsubscribeSnapshot) unsubscribeSnapshot();
 
             unsubscribeSnapshot = docRef.onSnapshot(docSnap => {
@@ -465,12 +464,15 @@
                     if (!dbData.mainFolders) {
                         let newMainFolders = [];
                         
+                        // Migrate Old Classes to new Main Folders
                         if (dbData.classes && dbData.classes.length > 0) {
                             dbData.classes.forEach(cls => {
                                 let mf = { id: 'mf_' + cls.id, name: cls.name, isVisible: cls.isVisible !== false, subFolders: [] };
                                 
+                                // Academics SubFolder
                                 let sfAcad = { id: 'sf_acad_' + cls.id, name: 'Academics', isVisible: true, topics: [] };
                                 (cls.subjects || []).forEach(sub => {
+                                    // Transfer existing layout settings
                                     let oldLayoutKey = `sub_${cls.id}_${sub.id}`;
                                     if (dbData.layouts && dbData.layouts[oldLayoutKey]) {
                                         dbData.layouts[`top_${mf.id}_${sfAcad.id}_top_${sub.id}`] = dbData.layouts[oldLayoutKey];
@@ -487,6 +489,7 @@
                                 });
                                 if (sfAcad.topics.length > 0) mf.subFolders.push(sfAcad);
                                 
+                                // Beyond Academics SubFolder
                                 let sfBeyond = { id: 'sf_beyond_' + cls.id, name: 'Beyond Academics', isVisible: true, topics: [] };
                                 if (dbData.sections) {
                                     let beyondSec = dbData.sections.find(s => !s.isAcademic);
@@ -497,6 +500,7 @@
                                                 let defIcon = cat === 'photoFeed' ? 'fa-images' : (cat === 'achievements' ? 'fa-trophy' : (cat === 'hobbies' ? 'fa-palette' : 'fa-medal'));
                                                 let newTopicId = 'top_' + cat;
                                                 
+                                                // Transfer existing layout settings
                                                 let oldLayoutKey = `cat_${cat}_${cls.id}`;
                                                 if (dbData.layouts && dbData.layouts[oldLayoutKey]) {
                                                     dbData.layouts[`top_${mf.id}_${sfBeyond.id}_${newTopicId}`] = dbData.layouts[oldLayoutKey];
@@ -520,6 +524,7 @@
                             });
                         }
                         
+                        // Always provide an "Others" main folder
                         newMainFolders.push({
                             id: 'mf_others', name: 'Others', isVisible: true, subFolders: [
                                 { id: 'sf_misc', name: 'Activities & Fun', isVisible: true, topics: [] }
@@ -528,6 +533,7 @@
                         
                         dbData.mainFolders = newMainFolders;
                         
+                        // Clean up old bulky data
                         delete dbData.classes;
                         delete dbData.sections;
                         delete dbData.categoryNames;
@@ -536,9 +542,9 @@
 
                         // AIRTIGHT SAFETY LOCK: Only attempt to write the migrated structure to the cloud IF logged in as Admin.
                         if (!window.hasAttemptedMigration) {
-                            window.hasAttemptedMigration = true; // Mark as attempted in local memory
+                            window.hasAttemptedMigration = true;
                             if (auth.currentUser) {
-                                docRef.set(dbData, { merge: true }).catch(e => console.log("Migration write protected."));
+                                docRef.set(dbData, { merge: true }).catch(e => console.log("Migration awaits admin."));
                             }
                         }
                     }
@@ -1188,6 +1194,8 @@
                             <div class="flex items-center space-x-1 p-1 hide-on-collapse" onclick="handleIconClick(event, () => toggleMenuSection('mf', '${mf.id}'))">
                                 <i class="fa-solid fa-chevron-${isMfCollapsed ? 'down' : 'up'} text-[10px] ${isActiveMf ? 'text-white/80' : 'text-slate-400'} transition"></i>
                                 <button onclick="toggleItemVisibility(event, state.mainFolders.find(m=>m.id==='${mf.id}'))" class="edit-controls-flex text-slate-400 hover:text-slate-600 p-1" title="Toggle Visibility"><i class="fa-solid ${isVisibleMf ? 'fa-eye' : 'fa-eye-slash'} text-[10px]"></i></button>
+                                <button onclick="moveMainFolder(event, '${mf.id}', -1)" class="edit-controls-flex text-slate-400 hover:text-[var(--theme-primary)] p-1" title="Move Up"><i class="fa-solid fa-arrow-up text-[10px]"></i></button>
+                                <button onclick="moveMainFolder(event, '${mf.id}', 1)" class="edit-controls-flex text-slate-400 hover:text-[var(--theme-primary)] p-1" title="Move Down"><i class="fa-solid fa-arrow-down text-[10px]"></i></button>
                                 <button onclick="removeMainFolder(event, '${mf.id}')" class="edit-controls-flex text-rose-400 hover:text-rose-600 p-1" title="Delete"><i class="fa-solid fa-times text-[10px]"></i></button>
                             </div>
                         </div>
@@ -1213,6 +1221,9 @@
                                 <div class="flex items-center space-x-1">
                                     <i class="fa-solid fa-chevron-${isSfCollapsed ? 'down' : 'up'} text-[8px] text-slate-400 transition"></i>
                                     <button onclick="toggleItemVisibility(event, state.mainFolders.find(m=>m.id==='${mf.id}').subFolders.find(s=>s.id==='${sf.id}'))" class="edit-controls-flex text-slate-400 hover:text-slate-600 p-1" title="Toggle Visibility"><i class="fa-solid ${isVisibleSf ? 'fa-eye' : 'fa-eye-slash'} text-[10px]"></i></button>
+                                    <button onclick="moveSubFolder(event, '${mf.id}', '${sf.id}', -1)" class="edit-controls-flex text-slate-400 hover:text-[var(--theme-primary)] p-1" title="Move Up"><i class="fa-solid fa-arrow-up text-[10px]"></i></button>
+                                    <button onclick="moveSubFolder(event, '${mf.id}', '${sf.id}', 1)" class="edit-controls-flex text-slate-400 hover:text-[var(--theme-primary)] p-1" title="Move Down"><i class="fa-solid fa-arrow-down text-[10px]"></i></button>
+                                    <button onclick="transferSubFolder(event, '${mf.id}', '${sf.id}')" class="edit-controls-flex text-indigo-400 hover:text-indigo-600 p-1" title="Move to another Folder"><i class="fa-solid fa-right-left text-[10px]"></i></button>
                                     <button onclick="removeSubFolder(event, '${mf.id}', '${sf.id}')" class="edit-controls-flex text-rose-400 hover:text-rose-600 p-1"><i class="fa-solid fa-times text-[10px]"></i></button>
                                 </div>
                             </div>
@@ -1234,6 +1245,9 @@
                                 </div>
                                 <div class="flex items-center space-x-0.5">
                                     <button onclick="toggleItemVisibility(event, state.mainFolders.find(m=>m.id==='${mf.id}').subFolders.find(s=>s.id==='${sf.id}').topics.find(t=>t.id==='${top.id}'))" class="edit-controls-flex text-slate-400 hover:text-slate-600 p-1"><i class="fa-solid ${isVisibleTop ? 'fa-eye' : 'fa-eye-slash'} text-[9px]"></i></button>
+                                    <button onclick="moveTopic(event, '${mf.id}', '${sf.id}', '${top.id}', -1)" class="edit-controls-flex text-slate-400 hover:text-[var(--theme-primary)] p-1"><i class="fa-solid fa-arrow-up text-[9px]"></i></button>
+                                    <button onclick="moveTopic(event, '${mf.id}', '${sf.id}', '${top.id}', 1)" class="edit-controls-flex text-slate-400 hover:text-[var(--theme-primary)] p-1"><i class="fa-solid fa-arrow-down text-[9px]"></i></button>
+                                    <button onclick="transferTopic(event, '${mf.id}', '${sf.id}', '${top.id}')" class="edit-controls-flex text-indigo-400 hover:text-indigo-600 p-1" title="Move to another Subcategory"><i class="fa-solid fa-right-left text-[9px]"></i></button>
                                     <button onclick="removeTopic(event, '${mf.id}', '${sf.id}', '${top.id}')" class="edit-controls-flex text-rose-400 hover:text-rose-600 p-1"><i class="fa-solid fa-times text-[9px]"></i></button>
                                 </div>
                             </div>
@@ -2344,6 +2358,183 @@
             }
             triggerSave();
             renderApp();
+        }
+
+        function moveMainFolder(e, mfId, dir) {
+            e.stopPropagation();
+            const idx = state.mainFolders.findIndex(m => m.id === mfId);
+            const newIdx = idx + dir;
+            if (newIdx < 0 || newIdx >= state.mainFolders.length) return;
+            const temp = state.mainFolders[idx];
+            state.mainFolders[idx] = state.mainFolders[newIdx];
+            state.mainFolders[newIdx] = temp;
+            triggerSave(); renderApp();
+        }
+
+        function moveSubFolder(e, mfId, sfId, dir) {
+            e.stopPropagation();
+            const mf = state.mainFolders.find(m => m.id === mfId);
+            if (!mf) return;
+            const idx = mf.subFolders.findIndex(s => s.id === sfId);
+            const newIdx = idx + dir;
+            if (newIdx < 0 || newIdx >= mf.subFolders.length) return;
+            const temp = mf.subFolders[idx];
+            mf.subFolders[idx] = mf.subFolders[newIdx];
+            mf.subFolders[newIdx] = temp;
+            triggerSave(); renderApp();
+        }
+
+        function moveTopic(e, mfId, sfId, topId, dir) {
+            e.stopPropagation();
+            const sf = state.mainFolders.find(m => m.id === mfId)?.subFolders.find(s => s.id === sfId);
+            if (!sf) return;
+            const idx = sf.topics.findIndex(t => t.id === topId);
+            const newIdx = idx + dir;
+            if (newIdx < 0 || newIdx >= sf.topics.length) return;
+            const temp = sf.topics[idx];
+            sf.topics[idx] = sf.topics[newIdx];
+            sf.topics[newIdx] = temp;
+            triggerSave(); renderApp();
+        }
+
+        function transferSubFolder(e, mfId, sfId) {
+            e.stopPropagation();
+            const mf = state.mainFolders.find(m => m.id === mfId);
+            const sfIndex = mf.subFolders.findIndex(s => s.id === sfId);
+            const sf = mf.subFolders[sfIndex];
+
+            let optionsHtml = state.mainFolders
+                .filter(m => m.id !== mfId)
+                .map((m, index) => `<button onclick="executeTransfer('${mfId}', ${sfIndex}, '${m.id}')" class="w-full text-left px-4 py-3 rounded-xl bg-slate-50 hover:bg-[var(--theme-light)] hover:text-[var(--theme-primary)] text-slate-700 font-bold text-sm transition mb-2"><i class="fa-regular fa-folder mr-2"></i> Move to ${m.name}</button>`)
+                .join('');
+
+            if (optionsHtml === '') {
+                optionsHtml = `<p class="text-sm text-slate-500 text-center py-4">No other Main Folders exist to move this to.</p>`;
+            }
+
+            const modal = document.getElementById('action-modal');
+            const panel = document.getElementById('action-modal-panel');
+            const title = document.getElementById('action-modal-title');
+            const input1 = document.getElementById('action-modal-input-1');
+            const input2 = document.getElementById('action-modal-input-2');
+            const cancelBtn = document.getElementById('action-modal-cancel');
+            const submitBtn = document.getElementById('action-modal-submit');
+            
+            title.innerText = `Move '${sf.name}'`;
+            input1.classList.add('hidden');
+            input2.classList.add('hidden');
+            submitBtn.classList.add('hidden');
+
+            const desc = document.getElementById('action-modal-desc');
+            desc.classList.remove('hidden');
+            desc.innerHTML = `Select a destination folder:<div class="mt-4 max-h-48 overflow-y-auto">${optionsHtml}</div>`;
+
+            const cleanup = () => {
+                modal.classList.add('opacity-0');
+                panel.classList.remove('scale-100');
+                panel.classList.add('scale-95');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    desc.classList.add('hidden');
+                    desc.innerHTML = '';
+                    submitBtn.classList.remove('hidden');
+                }, 300);
+            };
+            
+            cancelBtn.onclick = cleanup;
+            
+            modal.classList.remove('hidden');
+            void modal.offsetWidth;
+            modal.classList.remove('opacity-0');
+            panel.classList.remove('scale-95');
+            panel.classList.add('scale-100');
+            
+            window.executeTransfer = (fromMfId, sfIdx, toMfId) => {
+                const fromMf = state.mainFolders.find(m => m.id === fromMfId);
+                const toMf = state.mainFolders.find(m => m.id === toMfId);
+                const subFolder = fromMf.subFolders.splice(sfIdx, 1)[0];
+                if(!toMf.subFolders) toMf.subFolders = [];
+                toMf.subFolders.push(subFolder);
+                cleanup();
+                triggerSave();
+                renderApp();
+                showToast("Subcategory moved successfully!");
+            };
+        }
+
+        function transferTopic(e, mfId, sfId, topId) {
+            e.stopPropagation();
+            const mf = state.mainFolders.find(m => m.id === mfId);
+            const sf = mf.subFolders.find(s => s.id === sfId);
+            const topIndex = sf.topics.findIndex(t => t.id === topId);
+            const top = sf.topics[topIndex];
+
+            let optionsHtml = '';
+            state.mainFolders.forEach(m => {
+                (m.subFolders || []).forEach(s => {
+                    if (s.id !== sfId) { // Prevent moving to itself
+                        optionsHtml += `<button onclick="executeTopicTransfer('${mfId}', '${sfId}', ${topIndex}, '${m.id}', '${s.id}')" class="w-full text-left px-4 py-3 rounded-xl bg-slate-50 hover:bg-[var(--theme-light)] hover:text-[var(--theme-primary)] text-slate-700 font-bold text-sm transition mb-2"><i class="fa-regular fa-folder-open mr-2"></i> Move to ${m.name} / ${s.name}</button>`;
+                    }
+                });
+            });
+
+            if (optionsHtml === '') {
+                optionsHtml = `<p class="text-sm text-slate-500 text-center py-4">No other Subcategories exist to move this to.</p>`;
+            }
+
+            const modal = document.getElementById('action-modal');
+            const panel = document.getElementById('action-modal-panel');
+            const title = document.getElementById('action-modal-title');
+            const input1 = document.getElementById('action-modal-input-1');
+            const input2 = document.getElementById('action-modal-input-2');
+            const cancelBtn = document.getElementById('action-modal-cancel');
+            const submitBtn = document.getElementById('action-modal-submit');
+            
+            title.innerText = `Move '${top.name}'`;
+            input1.classList.add('hidden');
+            input2.classList.add('hidden');
+            submitBtn.classList.add('hidden');
+
+            const desc = document.getElementById('action-modal-desc');
+            desc.classList.remove('hidden');
+            desc.innerHTML = `Select a destination:<div class="mt-4 max-h-48 overflow-y-auto">${optionsHtml}</div>`;
+
+            const cleanup = () => {
+                modal.classList.add('opacity-0');
+                panel.classList.remove('scale-100');
+                panel.classList.add('scale-95');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    desc.classList.add('hidden');
+                    desc.innerHTML = '';
+                    submitBtn.classList.remove('hidden');
+                }, 300);
+            };
+            
+            cancelBtn.onclick = cleanup;
+            
+            modal.classList.remove('hidden');
+            void modal.offsetWidth;
+            modal.classList.remove('opacity-0');
+            panel.classList.remove('scale-95');
+            panel.classList.add('scale-100');
+            
+            window.executeTopicTransfer = (fromMfId, fromSfId, topIdx, toMfId, toSfId) => {
+                const fMf = state.mainFolders.find(m => m.id === fromMfId);
+                const fSf = fMf.subFolders.find(s => s.id === fromSfId);
+                
+                const tMf = state.mainFolders.find(m => m.id === toMfId);
+                const tSf = tMf.subFolders.find(s => s.id === toSfId);
+                
+                const topic = fSf.topics.splice(topIdx, 1)[0];
+                if(!tSf.topics) tSf.topics = [];
+                tSf.topics.push(topic);
+                
+                cleanup();
+                triggerSave();
+                renderApp();
+                showToast("Topic moved successfully!");
+            };
         }
 
         function moveItem(mfId, sfId, topId, idx, dir) {
